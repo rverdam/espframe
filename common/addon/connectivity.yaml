@@ -29,12 +29,28 @@ http_request:
 # -----------------------------------------------------------------------------
 captive_portal:
 
+script:
+  - id: show_wifi_setup_after_disconnect
+    mode: restart
+    then:
+      - delay: 20s
+      - if:
+          condition:
+            and:
+              - not:
+                  wifi.connected:
+              - lambda: 'return !id(boot_grace_period);'
+          then:
+            - lvgl.page.show: wifi_setup_page
+            - script.execute: setup_screen_dim
+
 wifi:
   reboot_timeout: 0s
   ap:
     ssid: "${name}"
   on_connect:
     - script.stop: setup_screen_dim
+    - script.stop: show_wifi_setup_after_disconnect
     - lambda: |-
         lv_bar_set_value(id(loading_progress_bar), 100, LV_ANIM_OFF);
         lv_label_set_text(id(loading_status_label), "Connected");
@@ -61,5 +77,4 @@ wifi:
         condition:
           lambda: 'return !id(boot_grace_period);'
         then:
-          - lvgl.page.show: wifi_setup_page
-          - script.execute: setup_screen_dim
+          - script.execute: show_wifi_setup_after_disconnect
