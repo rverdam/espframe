@@ -27,6 +27,8 @@ Display controls in **Settings**: brightness (day/night), tone, optional schedul
 | **Off Time** | 23 | Backlight off (hour) |
 | **When Woken, Idle Time To Screen Off** | 60 seconds | How long a touch wake stays on during the off period |
 
+In Home Assistant, **Screen: Sleep** and **Screen: Wake** expose the same sleep/wake behavior as the touchscreen controls. Sleep pauses the slideshow fetch loop instead of only dimming the panel.
+
 ## Rotation
 
 **Rotation** rotates the LVGL display layer, so the picture and touch input turn together. This uses ESPHome 2026.4's LVGL rotation support.

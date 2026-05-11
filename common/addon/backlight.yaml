@@ -40,6 +40,43 @@ light:
                        (id(schedule_enabled).state && !id(sntp_time).now().is_valid());
             then:
               - script.execute: backlight_force_display_off
+            else:
+              - if:
+                  condition:
+                    lambda: |-
+                      return id(backlight_paused) ||
+                             id(screensaver_display_off_active) ||
+                             id(backlight_manual_off);
+                  then:
+                    - script.execute: backlight_wake
+    on_turn_off:
+      then:
+        - if:
+            condition:
+              lambda: |-
+                return !id(backlight_paused) &&
+                       !id(screen_schedule_asleep) &&
+                       !id(screensaver_display_off_active) &&
+                       !id(backlight_manual_off);
+            then:
+              - script.execute: screen_schedule_manual_sleep
+
+button:
+  - platform: template
+    name: "Screen: Sleep"
+    icon: "mdi:power-sleep"
+    web_server:
+      sorting_group_id: sg_screen
+    on_press:
+      - script.execute: screen_schedule_manual_sleep
+
+  - platform: template
+    name: "Screen: Wake"
+    icon: "mdi:power"
+    web_server:
+      sorting_group_id: sg_screen
+    on_press:
+      - script.execute: backlight_wake
 
 script:
   - id: backlight_force_display_off

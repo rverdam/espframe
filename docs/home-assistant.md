@@ -37,7 +37,9 @@ Under **Settings → Devices & Services → ESPHome** (device page):
 | **Photos: Portrait Pairing** | Switch | Pair compatible portrait photos side-by-side |
 | **Screen: Connection Timeout** | Select | 30s–30min before showing connection-failed screen |
 | **Screen: Rotation** | Select | LVGL screen rotation: 0 or 180 degrees |
-| **Screen: Backlight** | Light | On/off and brightness (0–100%) |
+| **Screen: Backlight** | Light | On/off and brightness (0–100%). Turning it off puts the frame to sleep; turning it on wakes manual sleep unless scheduled off-hours are active. |
+| **Screen: Sleep** | Button | Puts the display into the same sleep state as the touchscreen hold gesture, pausing slideshow fetches. |
+| **Screen: Wake** | Button | Wakes the display and resumes the slideshow. During scheduled off-hours, this is a temporary wake using the configured wake timeout. |
 | **Firmware: Auto Update** | Switch | Install updates when available |
 | **Firmware: Update Frequency** | Select | Hourly, Daily, Weekly, Monthly |
 | **Firmware: Beta Channel** | Switch | Opt in to pre-release firmware checks |
@@ -49,4 +51,4 @@ Under **Settings → Devices & Services → ESPHome** (device page):
 
 ## Automations
 
-Use entities in automations, e.g.: turn **Screen: Backlight** on/off by presence; change **Photos: Slideshow Interval**, **Photos: Source**, or the date filter by time; notify when **Network: Online** goes unavailable; trigger **Firmware: Check for Update** from a script.
+Use entities in automations, e.g.: press **Screen: Sleep** when a room becomes empty and **Screen: Wake** when it becomes occupied; change **Photos: Slideshow Interval**, **Photos: Source**, or the date filter by time; notify when **Network: Online** goes unavailable; trigger **Firmware: Check for Update** from a script.
