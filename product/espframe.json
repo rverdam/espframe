@@ -4,6 +4,8 @@
     "npm_package_name": "immich-frame",
     "license_id": "PolyForm-Noncommercial-1.0.0",
     "license_name": "PolyForm Noncommercial License 1.0.0",
+    "owner_name": "jtenniswood",
+    "owner_url": "https://github.com/jtenniswood",
     "package_name": "jtenniswood.immich-frame",
     "repository_url": "https://github.com/jtenniswood/espframe",
     "public_base_url": "https://jtenniswood.github.io/espframe",

@@ -240,6 +240,8 @@ def check_project_metadata(product: dict, errors: list[str]) -> None:
         "npm_package_name",
         "license_id",
         "license_name",
+        "owner_name",
+        "owner_url",
         "package_name",
         "repository_url",
         "release_url_base",
@@ -270,6 +272,9 @@ def check_project_metadata(product: dict, errors: list[str]) -> None:
         value = str(project.get(field, "")).strip()
         if value and not value.startswith("https://"):
             errors.append(f"project.{field} must be an https URL")
+    owner_url = str(project.get("owner_url", "")).strip()
+    if owner_url and not owner_url.startswith("https://"):
+        errors.append("project.owner_url must be an https URL")
 
     firmware_update = read(ROOT / "common" / "addon" / "firmware_update.yaml", errors)
     if package_name:
@@ -469,6 +474,8 @@ def check_docs_site_config(product: dict, errors: list[str]) -> None:
     docs_url = public_url("", product)
     base_path = f"/{base_url.rstrip('/').rsplit('/', 1)[-1]}/"
     repository_url = str(project.get("repository_url", "")).strip().rstrip("/")
+    owner_name = str(project.get("owner_name", "")).strip()
+    owner_url = str(project.get("owner_url", "")).strip()
 
     if project_name:
         require_contains(config, f"title: '{project_name}'", "docs/.vitepress/config.mts", errors)
@@ -479,6 +486,10 @@ def check_docs_site_config(product: dict, errors: list[str]) -> None:
     if repository_url:
         require_contains(config, f"link: '{repository_url}'", "docs/.vitepress/config.mts", errors)
         require_contains(config, f"pattern: '{repository_url}/edit/main/docs/:path'", "docs/.vitepress/config.mts", errors)
+    if owner_name:
+        require_contains(config, f"name: '{owner_name}'", "docs/.vitepress/config.mts", errors)
+    if owner_url:
+        require_contains(config, f"url: '{owner_url}'", "docs/.vitepress/config.mts", errors)
 
 
 def check_device_workflow_contract(product: dict, errors: list[str]) -> None:
