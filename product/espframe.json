@@ -1,6 +1,7 @@
 {
   "project": {
     "name": "Espframe for Immich",
+    "npm_package_name": "immich-frame",
     "package_name": "jtenniswood.immich-frame",
     "repository_url": "https://github.com/jtenniswood/espframe",
     "public_base_url": "https://jtenniswood.github.io/espframe",

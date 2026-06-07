@@ -237,6 +237,7 @@ def check_project_metadata(product: dict, errors: list[str]) -> None:
     project = product["project"]
     for field in (
         "name",
+        "npm_package_name",
         "package_name",
         "repository_url",
         "release_url_base",
@@ -271,6 +272,28 @@ def check_project_metadata(product: dict, errors: list[str]) -> None:
     firmware_update = read(ROOT / "common" / "addon" / "firmware_update.yaml", errors)
     if package_name:
         require_contains(firmware_update, f"name: {package_name}", "common/addon/firmware_update.yaml", errors)
+
+
+def check_npm_package_metadata(product: dict, errors: list[str]) -> None:
+    expected_name = str(product["project"].get("npm_package_name", "")).strip()
+    if not expected_name:
+        errors.append("project.npm_package_name is required")
+        return
+
+    try:
+        package_json = json.loads(read(ROOT / "package.json", errors) or "{}")
+        package_lock = json.loads(read(ROOT / "package-lock.json", errors) or "{}")
+    except json.JSONDecodeError as exc:
+        errors.append(f"Package metadata JSON is invalid: {exc}")
+        return
+
+    if package_json.get("name") != expected_name:
+        errors.append("package.json name must match project.npm_package_name")
+    if package_lock.get("name") != expected_name:
+        errors.append("package-lock.json name must match project.npm_package_name")
+    root_package = package_lock.get("packages", {}).get("", {})
+    if root_package.get("name") != expected_name:
+        errors.append("package-lock.json root package name must match project.npm_package_name")
 
 
 def check_public_manifest_urls(product: dict, errors: list[str]) -> None:
@@ -972,6 +995,7 @@ def main() -> int:
     errors: list[str] = []
     product = load_product()
     check_project_metadata(product, errors)
+    check_npm_package_metadata(product, errors)
     check_devices(product, errors)
     check_public_manifest_urls(product, errors)
     check_public_site_references(product, errors)
