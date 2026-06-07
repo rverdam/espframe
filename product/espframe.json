@@ -420,6 +420,11 @@
       "docs": { "contents": "read", "pages": "write", "id-token": "write" },
       "release": { "contents": "write" }
     },
+    "github_workflow_names": {
+      "compile": "Compile Check",
+      "docs": "Deploy Docs",
+      "release": "Build Release"
+    },
     "firmware_compile_timeout_minutes": 30,
     "esphome_version": "2026.5.0"
   },

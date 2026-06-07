@@ -668,6 +668,24 @@ def check_project_metadata(product: dict, errors: list[str]) -> None:
                     errors.append(
                         f"project.github_workflow_permissions.{name or '<missing>'}.{scope or '<missing>'} must be read, write, or none"
                     )
+    workflow_names = project.get("github_workflow_names", {})
+    if not isinstance(workflow_names, dict) or not workflow_names:
+        errors.append("project.github_workflow_names must be a non-empty object")
+    else:
+        configured_workflows = {str(name).strip() for name in workflow_names}
+        missing_workflows = sorted(expected_workflows - configured_workflows)
+        extra_workflows = sorted(configured_workflows - expected_workflows)
+        if missing_workflows:
+            errors.append(f"project.github_workflow_names is missing workflows: {', '.join(missing_workflows)}")
+        if extra_workflows:
+            errors.append(f"project.github_workflow_names contains unknown workflows: {', '.join(extra_workflows)}")
+        for raw_name, raw_label in workflow_names.items():
+            name = str(raw_name).strip()
+            label = str(raw_label).strip()
+            if not name:
+                errors.append("project.github_workflow_names keys must be non-empty strings")
+            if not label:
+                errors.append(f"project.github_workflow_names.{name or '<missing>'} must be a non-empty string")
     release_asset_suffixes = project.get("release_asset_suffixes", [])
     if not isinstance(release_asset_suffixes, list) or not release_asset_suffixes:
         errors.append("project.release_asset_suffixes must be a non-empty list")
@@ -3198,6 +3216,18 @@ def check_workflows(product: dict, errors: list[str]) -> None:
         "release": (".github/workflows/release.yml", release_workflow),
     }
     workflow_permissions = product["project"].get("github_workflow_permissions", {})
+    workflow_names = product["project"].get("github_workflow_names", {})
+    if isinstance(workflow_names, dict):
+        for workflow, raw_name in workflow_names.items():
+            workflow_name = str(workflow).strip()
+            name = str(raw_name).strip()
+            if workflow_name not in workflow_texts or not name:
+                continue
+            label, text = workflow_texts[workflow_name]
+            require_contains(text, f"name: {name}", label, errors)
+        release_workflow_name = str(workflow_names.get("release", "")).strip()
+        if release_workflow_name:
+            require_contains(docs_workflow, f'workflows: ["{release_workflow_name}"]', ".github/workflows/docs.yml", errors)
     if isinstance(workflow_permissions, dict):
         for workflow, raw_permissions in workflow_permissions.items():
             workflow_name = str(workflow).strip()
