@@ -34,6 +34,21 @@ WEB_ENTITY_ALIASES = {
     "schedule_on_hour": [{"entity": "number/Screen: Schedule On", "default": 6, "number": True}],
     "schedule_off_hour": [{"entity": "number/Screen: Schedule Off", "default": 23, "number": True}],
 }
+WEB_LOCAL_STATE_KEYS = {
+    "api_key",
+    "backlight_on",
+    "beta_available",
+    "beta_version",
+    "brightness",
+    "brightness_current",
+    "immich_url",
+    "installed_version",
+    "latest_version",
+    "tz_labels",
+    "tz_options",
+    "update_available",
+}
+WEB_MANUAL_ENDPOINT_KEYS = {"api_key", "backlight", "immich_url", "update", "update_beta"}
 DOCS_SETTINGS_TABLES = {
     ROOT / "docs" / "screen-settings.md": {
         "screen_brightness": {"settings": ["brightness_day", "brightness_night"]},

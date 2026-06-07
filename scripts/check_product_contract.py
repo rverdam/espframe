@@ -17,6 +17,8 @@ from product_config import (
     DOCS_SETTINGS_TABLE_COLUMNS,
     DOCS_SETTINGS_TABLES,
     WEB_ENTITY_ALIASES,
+    WEB_LOCAL_STATE_KEYS,
+    WEB_MANUAL_ENDPOINT_KEYS,
     WEB_STATIC_ENTITIES,
     load_product,
     web_entity_aliases_metadata,
@@ -31,6 +33,12 @@ WEB_TEMPLATE = ROOT / "docs" / "webserver" / "src" / "app.template.js"
 WEB_APP = ROOT / "docs" / "public" / "webserver" / "app.js"
 SETTING_DOMAINS = {"number", "select", "switch", "text"}
 DOCS_TABLE_ID_RE = re.compile(r"^[A-Za-z0-9_-]+$")
+WEB_STATE_REF_RE = re.compile(r"\bS\.([A-Za-z_$][A-Za-z0-9_$]*)")
+WEB_ENDPOINT_REF_RE = re.compile(r"\bendpoints\.([A-Za-z_$][A-Za-z0-9_$]*)")
+WEB_PRODUCT_HELPER_REF_RE = re.compile(
+    r"\b(?:productSettingOptions|productNumberMin|productNumberMax|productNumberStep)\(\s*\"([^\"]+)\""
+)
+WEB_PRODUCT_SETTINGS_REF_RE = re.compile(r"\bPRODUCT_SETTINGS\.([A-Za-z_$][A-Za-z0-9_$]*)")
 
 
 def rel(path: Path) -> str:
@@ -300,6 +308,27 @@ def check_generated_web_metadata(product: dict, web_text: str, errors: list[str]
         errors.append("Generated web INITIAL_FETCH_KEYS does not match product/espframe.json")
 
 
+def check_web_template_key_references(product: dict, web_template: str, errors: list[str]) -> None:
+    product_keys = {str(setting.get("key", "")).strip() for setting in product["settings"]}
+    static_keys = set(WEB_STATIC_ENTITIES)
+    known_state_keys = product_keys | static_keys | set(WEB_LOCAL_STATE_KEYS)
+    known_endpoint_keys = product_keys | static_keys | set(WEB_MANUAL_ENDPOINT_KEYS)
+
+    for key in sorted(set(WEB_STATE_REF_RE.findall(web_template))):
+        if key not in known_state_keys:
+            errors.append(f"Web template references unknown state key S.{key}")
+
+    for key in sorted(set(WEB_ENDPOINT_REF_RE.findall(web_template))):
+        if key not in known_endpoint_keys:
+            errors.append(f"Web template references unknown endpoint key endpoints.{key}")
+
+    helper_keys = set(WEB_PRODUCT_HELPER_REF_RE.findall(web_template))
+    helper_keys.update(WEB_PRODUCT_SETTINGS_REF_RE.findall(web_template))
+    for key in sorted(helper_keys):
+        if key not in product_keys:
+            errors.append(f"Web template references unknown product setting {key}")
+
+
 def check_docs_table_membership(product: dict, errors: list[str]) -> None:
     settings_by_key = {str(setting.get("key", "")): setting for setting in product["settings"]}
     table_memberships: set[tuple[str, str]] = set()
@@ -501,6 +530,7 @@ def check_settings(product: dict, errors: list[str]) -> None:
     web_text = read(WEB_APP, errors)
     check_web_entity_metadata(product, errors)
     check_generated_web_metadata(product, web_text, errors)
+    check_web_template_key_references(product, web_template, errors)
     check_docs_table_metadata(product, errors)
     check_docs_table_membership(product, errors)
     check_docs_table_markers(errors)
