@@ -1,0 +1,117 @@
+{
+  "project": {
+    "name": "Espframe for Immich",
+    "package_name": "jtenniswood.immich-frame",
+    "release_url_base": "https://github.com/jtenniswood/espframe/releases/tag/",
+    "esphome_version": "2026.5.0"
+  },
+  "devices": [
+    {
+      "slug": "immich-frame",
+      "name": "Immich Frame",
+      "chip": "ESP32-P4",
+      "model": "Guition ESP32-P4 JC8012P4A1",
+      "build_yaml": "builds/guition-esp32-p4-jc8012p4a1.factory.yaml",
+      "public_manifest": "firmware/manifest.json",
+      "public_beta_manifest": "firmware/beta/manifest.json"
+    }
+  ],
+  "settings": [
+    {
+      "key": "photo_source",
+      "entity": { "domain": "select", "name": "Photos: Source" },
+      "default": "All Photos",
+      "options": ["All Photos", "Favorites", "Album", "Person", "Memories"],
+      "firmware_files": ["common/addon/immich_filter.yaml"],
+      "docs_files": ["docs/photo-sources.md"]
+    },
+    {
+      "key": "date_filter_mode",
+      "entity": { "domain": "select", "name": "Photos: Date Filter Mode" },
+      "default": "Fixed Range",
+      "options": ["Fixed Range", "Relative Range"],
+      "firmware_files": ["common/addon/immich_filter.yaml"],
+      "docs_files": ["docs/photo-sources.md"]
+    },
+    {
+      "key": "relative_unit",
+      "entity": { "domain": "select", "name": "Photos: Relative Unit" },
+      "default": "Years",
+      "options": ["Months", "Years"],
+      "firmware_files": ["common/addon/immich_filter.yaml"],
+      "docs_files": ["docs/photo-sources.md"]
+    },
+    {
+      "key": "photo_orientation",
+      "entity": { "domain": "select", "name": "Photos: Orientation" },
+      "default": "Any",
+      "options": ["Any", "Portrait Only", "Landscape Only"],
+      "firmware_files": ["common/addon/immich_filter.yaml"],
+      "docs_files": ["docs/photo-sources.md"]
+    },
+    {
+      "key": "display_mode",
+      "entity": { "domain": "select", "name": "Photos: Display Mode" },
+      "default": "Fill",
+      "options": ["Fill", "Fit"],
+      "firmware_files": ["common/addon/immich_config.yaml"],
+      "docs_files": ["docs/photo-sources.md"]
+    },
+    {
+      "key": "interval",
+      "entity": { "domain": "select", "name": "Photos: Slideshow Interval" },
+      "default": "15 seconds",
+      "options": ["10 seconds", "15 seconds", "20 seconds", "30 seconds", "45 seconds", "1 minute", "2 minutes", "3 minutes", "5 minutes", "10 minutes"],
+      "firmware_files": ["devices/guition-esp32-p4-jc8012p4a1/device/screen_slideshow.yaml"],
+      "docs_files": ["docs/photo-sources.md"]
+    },
+    {
+      "key": "conn_timeout",
+      "entity": { "domain": "select", "name": "Screen: Connection Timeout" },
+      "default": "10 minutes",
+      "options": ["30 seconds", "45 seconds", "1 minute", "2 minutes", "3 minutes", "5 minutes", "10 minutes", "15 minutes", "20 minutes", "30 minutes"],
+      "firmware_files": ["devices/guition-esp32-p4-jc8012p4a1/device/screen_slideshow.yaml"],
+      "docs_files": ["docs/photo-sources.md"]
+    },
+    {
+      "key": "screen_rotation",
+      "entity": { "domain": "select", "name": "Screen: Rotation" },
+      "default": "0",
+      "options": ["0", "180"],
+      "firmware_files": ["common/addon/screen_rotation.yaml"],
+      "docs_files": ["docs/screen-settings.md"]
+    },
+    {
+      "key": "photo_metadata_date_format",
+      "entity": { "domain": "select", "name": "Device: Metadata Date Format" },
+      "default": "Date Taken",
+      "options": ["Relative Date", "Date Taken"],
+      "firmware_files": ["common/addon/immich_slideshow.yaml"],
+      "docs_files": ["docs/photo-sources.md"]
+    },
+    {
+      "key": "photo_metadata_date_taken_format",
+      "entity": { "domain": "select", "name": "Device: Metadata Date Taken Format" },
+      "default": "1 January, 2026",
+      "options": ["1 January, 2026", "January 1, 2026"],
+      "firmware_files": ["common/addon/immich_slideshow.yaml"],
+      "docs_files": ["docs/photo-sources.md"]
+    },
+    {
+      "key": "clock_format",
+      "entity": { "domain": "select", "name": "Clock: Format" },
+      "default": "24 Hour",
+      "options": ["24 Hour", "12 Hour"],
+      "firmware_files": ["common/addon/time.yaml"],
+      "docs_files": ["docs/install.md"]
+    },
+    {
+      "key": "update_frequency",
+      "entity": { "domain": "select", "name": "Firmware: Update Frequency" },
+      "default": "Daily",
+      "options": ["Hourly", "Daily", "Weekly", "Monthly"],
+      "firmware_files": ["common/addon/firmware_update.yaml"],
+      "docs_files": ["docs/firmware-update.md"]
+    }
+  ]
+}

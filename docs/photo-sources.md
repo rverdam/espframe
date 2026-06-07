@@ -117,7 +117,7 @@ Use **Metadata** in the **Immich** section of the web UI to control the photo in
 | **Location** | On | Shows the photo location when Immich has location data for the image. |
 | **Date** | On | Shows the photo date. |
 | **Date Format** | Date Taken | Choose whether the date uses the photo's taken date or a relative age. |
-| **Date Taken Format** | `1 January, 2000` | Choose the display style used when **Date Format** is set to **Date Taken**. |
+| **Date Taken Format** | `1 January, 2026` | Choose the display style used when **Date Format** is set to **Date Taken**. |
 
 ---
 

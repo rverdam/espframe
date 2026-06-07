@@ -21,11 +21,13 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from urllib.parse import urljoin
 
+from product_config import devices_by_slug, project_value
+
 ROOT = Path(__file__).resolve().parent.parent
 FIRMWARE_VERSION_PLACEHOLDER = '  firmware_version: "0.0.0"'
 PLACEHOLDER_STRINGS = {"dev", "0.0.0", "main"}
-RELEASE_URL_BASE = "https://github.com/jtenniswood/espframe/releases/tag/"
-PROJECT_NAME = "jtenniswood.immich-frame"
+RELEASE_URL_BASE = project_value("release_url_base", "https://github.com/jtenniswood/espframe/releases/tag/")
+PROJECT_NAME = project_value("package_name", "jtenniswood.immich-frame")
 RELEASE_VERSION_RE = re.compile(r"^v\d+\.\d+\.\d+(?:-[0-9A-Za-z][0-9A-Za-z.-]*)?$")
 
 
@@ -39,16 +41,21 @@ class Device:
     public_beta_manifest: str
 
 
-DEVICES = {
-    "immich-frame": Device(
-        slug="immich-frame",
-        name="Immich Frame",
-        chip="ESP32-P4",
-        build_yaml="builds/guition-esp32-p4-jc8012p4a1.factory.yaml",
-        public_manifest="firmware/manifest.json",
-        public_beta_manifest="firmware/beta/manifest.json",
-    ),
-}
+def load_devices() -> dict[str, Device]:
+    loaded: dict[str, Device] = {}
+    for slug, device in devices_by_slug().items():
+        loaded[slug] = Device(
+            slug=slug,
+            name=str(device["name"]),
+            chip=str(device["chip"]),
+            build_yaml=str(device["build_yaml"]),
+            public_manifest=str(device["public_manifest"]),
+            public_beta_manifest=str(device["public_beta_manifest"]),
+        )
+    return loaded
+
+
+DEVICES = load_devices()
 
 
 class FirmwareReleaseError(RuntimeError):

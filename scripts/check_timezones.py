@@ -15,6 +15,12 @@ ROOT = Path(__file__).resolve().parents[1]
 TIMEZONES_PATH = ROOT / "components" / "espframe" / "timezones.py"
 CASABLANCA = "Africa/Casablanca"
 CASABLANCA_LIMITATION = "Ramadan UTC+0 transition is not representable by the compact POSIX string"
+VANCOUVER = "America/Vancouver"
+VANCOUVER_PERMANENT_DST = (
+    "British Columbia's March 2026 one-time switch to permanent daylight time "
+    "is not fully representable by a compact POSIX string"
+)
+VANCOUVER_PERMANENT_DST_START = dt.datetime(2026, 3, 8, 10, tzinfo=dt.timezone.utc)
 
 
 def load_timezones():
@@ -85,6 +91,18 @@ def main() -> int:
             raise AssertionError(f"{tz} label {gmt} is not one of the sampled IANA offsets {sorted(iana_offsets)}")
 
         if tz == CASABLANCA:
+            continue
+
+        if tz == VANCOUVER:
+            assert VANCOUVER in row_by_tz, VANCOUVER_PERMANENT_DST
+            for instant in sample_instants:
+                if instant < VANCOUVER_PERMANENT_DST_START:
+                    continue
+                assert_close(
+                    posix_offset_hours(posix, instant),
+                    iana_offset_hours(tz, instant),
+                    f"{tz} POSIX offset after permanent DST switch on {instant.date()}",
+                )
             continue
 
         for instant in sample_instants:

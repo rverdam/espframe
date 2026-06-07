@@ -14,7 +14,11 @@ TIMEZONES = [
     ("America/Anchorage",               "GMT-9",      61.22, -149.90, "AKST9AKDT,M3.2.0,M11.1.0"),
     ("America/Juneau",                  "GMT-9",      58.30, -134.42, "AKST9AKDT,M3.2.0,M11.1.0"),
     ("America/Los_Angeles",             "GMT-8",      34.05, -118.24, "PST8PDT,M3.2.0,M11.1.0"),
-    ("America/Vancouver",               "GMT-8",      49.28, -123.12, "PST8PDT,M3.2.0,M11.1.0"),
+    # British Columbia moved Vancouver to permanent daylight time after the
+    # March 2026 spring-forward. POSIX TZ strings cannot express that one-time
+    # transition, so use the current/future fixed UTC-7 rule while keeping the
+    # existing GMT-8 option value for saved-setting compatibility.
+    ("America/Vancouver",               "GMT-8",      49.28, -123.12, "<-07>7"),
     ("America/Tijuana",                 "GMT-8",      32.51, -117.04, "PST8PDT,M3.2.0,M11.1.0"),
     ("America/Denver",                  "GMT-7",      39.74, -104.98, "MST7MDT,M3.2.0,M11.1.0"),
     ("America/Phoenix",                 "GMT-7",      33.45, -112.07, "MST7"),
@@ -226,6 +230,8 @@ def web_timezone_label(tz: str, gmt: str, posix: str) -> str:
     option = f"{tz} ({gmt})"
     offsets = posix_conventional_offsets(posix)
     if len(offsets) < 2:
+        if offsets and abs(offsets[0] - parse_gmt_label(gmt)) > 0.0001:
+            return f"{tz} ({gmt}; active {format_gmt_offset(offsets[0])})"
         return option
     base_offset = parse_gmt_label(gmt)
     daylight_offset = max(offsets)

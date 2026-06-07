@@ -129,7 +129,10 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          sparse-checkout: scripts/firmware_release.py
+          sparse-checkout: |
+            scripts/firmware_release.py
+            scripts/product_config.py
+            product/espframe.json
           sparse-checkout-cone-mode: false
 
       - name: Download all firmware artifacts
