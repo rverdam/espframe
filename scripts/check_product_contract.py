@@ -223,6 +223,10 @@ def check_setting_schema(setting: dict, errors: list[str]) -> None:
     elif domain == "switch":
         if not isinstance(raw_default, bool):
             errors.append(f"Switch setting {key} default must be true or false")
+        else:
+            expected_docs_default = "On" if raw_default else "Off"
+            if setting.get("docs_default") and setting.get("docs_default") != expected_docs_default:
+                errors.append(f"Switch setting {key} docs_default must be {expected_docs_default}")
         if options or developer_options:
             errors.append(f"Switch setting {key} must not define options")
     elif domain == "text":
