@@ -201,6 +201,27 @@ def check_devices(product: dict, errors: list[str]) -> None:
         read(build_yaml, errors)
 
 
+def check_project_metadata(product: dict, errors: list[str]) -> None:
+    project = product["project"]
+    for field in ("name", "package_name", "release_url_base", "public_base_url"):
+        if not str(project.get(field, "")).strip():
+            errors.append(f"project.{field} is required")
+
+    package_name = str(project.get("package_name", "")).strip()
+    if package_name and not re.match(r"^[A-Za-z0-9_.-]+\.[A-Za-z0-9_.-]+$", package_name):
+        errors.append("project.package_name must look like a reverse-DNS package name")
+
+    release_url_base = str(project.get("release_url_base", "")).strip()
+    if release_url_base and not release_url_base.startswith("https://"):
+        errors.append("project.release_url_base must be an https URL")
+    if release_url_base and not release_url_base.endswith("/"):
+        errors.append("project.release_url_base must end with /")
+
+    firmware_update = read(ROOT / "common" / "addon" / "firmware_update.yaml", errors)
+    if package_name:
+        require_contains(firmware_update, f"name: {package_name}", "common/addon/firmware_update.yaml", errors)
+
+
 def check_public_manifest_urls(product: dict, errors: list[str]) -> None:
     base_url = public_base_url(product)
     if not base_url.startswith("https://"):
@@ -736,6 +757,7 @@ def check_settings(product: dict, errors: list[str]) -> None:
 def main() -> int:
     errors: list[str] = []
     product = load_product()
+    check_project_metadata(product, errors)
     check_devices(product, errors)
     check_public_manifest_urls(product, errors)
     check_device_workflow_contract(product, errors)
