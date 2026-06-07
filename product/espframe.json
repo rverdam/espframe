@@ -47,6 +47,11 @@
     "privacy_no_extra_account": "no extra account",
     "privacy_no_uploads": "does not upload photos",
     "privacy_no_hosted_service": "hosted service",
+    "touch_controls": [
+      { "action": "Wake", "gesture": "Tap the screen when it's off" },
+      { "action": "Sleep", "gesture": "Press and hold for 3 seconds, then release" },
+      { "action": "Next photo", "gesture": "Double-tap on the photo" }
+    ],
     "favicon": "favicon.svg",
     "npm_package_name": "immich-frame",
     "license_id": "PolyForm-Noncommercial-1.0.0",

@@ -341,6 +341,18 @@ def check_project_metadata(product: dict, errors: list[str]) -> None:
         errors.append("project.backup_excluded_runtime_values must be a non-empty list")
     elif any(not isinstance(value, str) or not value.strip() for value in backup_excluded_values):
         errors.append("project.backup_excluded_runtime_values must only contain non-empty strings")
+    touch_controls = project.get("touch_controls", [])
+    if not isinstance(touch_controls, list) or not touch_controls:
+        errors.append("project.touch_controls must be a non-empty list")
+    else:
+        for control in touch_controls:
+            if not isinstance(control, dict):
+                errors.append("project.touch_controls entries must be objects")
+                continue
+            if not str(control.get("action", "")).strip():
+                errors.append("project.touch_controls entry is missing action")
+            if not str(control.get("gesture", "")).strip():
+                errors.append("project.touch_controls entry is missing gesture")
     permissions = project.get("immich_api_key_permissions", [])
     if not isinstance(permissions, list) or not permissions:
         errors.append("project.immich_api_key_permissions must be a non-empty list")
@@ -630,6 +642,39 @@ def check_privacy_metadata(product: dict, errors: list[str]) -> None:
         require_contains(ai_txt, needle, "docs/public/ai.txt", errors)
     for needle in ("cloud account", "separate bridge service"):
         require_contains(index_docs, needle, "docs/index.md", errors)
+
+
+def check_touch_controls_metadata(product: dict, errors: list[str]) -> None:
+    controls = product["project"].get("touch_controls", [])
+    readme = read(ROOT / "README.md", errors)
+    touch_docs = read(ROOT / "docs" / "touch-controls.md", errors)
+    troubleshooting_docs = read(ROOT / "docs" / "troubleshooting.md", errors)
+    screen_settings_docs = read(ROOT / "docs" / "screen-settings.md", errors)
+    slideshow_yaml = read(ROOT / "devices" / "guition-esp32-p4-jc8012p4a1" / "device" / "screen_slideshow.yaml", errors)
+    backlight_schedule_yaml = read(ROOT / "common" / "addon" / "backlight_schedule.yaml", errors)
+    backlight_yaml = read(ROOT / "common" / "addon" / "backlight.yaml", errors)
+
+    if isinstance(controls, list):
+        for control in controls:
+            if not isinstance(control, dict):
+                continue
+            action = str(control.get("action", "")).strip()
+            gesture = str(control.get("gesture", "")).strip()
+            if action:
+                require_contains(touch_docs, f"**{action}**", "docs/touch-controls.md", errors)
+            if gesture:
+                require_contains(touch_docs, gesture, "docs/touch-controls.md", errors)
+
+    for needle in ("tap to wake", "double-tap to advance to the next photo", "press-and-hold to sleep"):
+        require_contains(readme, needle, "README.md", errors)
+    require_contains(troubleshooting_docs, "wake, sleep, or next-photo gestures", "docs/troubleshooting.md", errors)
+    require_contains(screen_settings_docs, "same sleep/wake behavior as the touchscreen controls", "docs/screen-settings.md", errors)
+    for needle in ("slideshow_on_press", "slideshow_on_short_click", "last_short_tap_ms", "immich_advance_forward"):
+        require_contains(slideshow_yaml, needle, "devices/guition-esp32-p4-jc8012p4a1/device/screen_slideshow.yaml", errors)
+    for needle in ("3-second hold timer", "delay: 3s", "screen_schedule_manual_sleep"):
+        require_contains(backlight_schedule_yaml, needle, "common/addon/backlight_schedule.yaml", errors)
+    for needle in ('name: "Screen: Sleep"', 'name: "Screen: Wake"'):
+        require_contains(backlight_yaml, needle, "common/addon/backlight.yaml", errors)
 
 
 def check_public_manifest_urls(product: dict, errors: list[str]) -> None:
@@ -1438,6 +1483,7 @@ def main() -> int:
     check_firmware_update_metadata(product, errors)
     check_backup_metadata(product, errors)
     check_privacy_metadata(product, errors)
+    check_touch_controls_metadata(product, errors)
     check_devices(product, errors)
     check_public_manifest_urls(product, errors)
     check_public_site_references(product, errors)
