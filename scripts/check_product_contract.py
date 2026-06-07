@@ -210,6 +210,14 @@ def check_devices(product: dict, errors: list[str]) -> None:
             "esphome_name",
             "friendly_name",
             "chip",
+            "model",
+            "esp32_variant",
+            "flash_size",
+            "esp32_hosted_variant",
+            "psram_mode",
+            "psram_speed",
+            "display_panel",
+            "touch_platform",
             "build_yaml",
             "package_yaml",
             "local_yaml",
@@ -227,10 +235,47 @@ def check_devices(product: dict, errors: list[str]) -> None:
             if path:
                 read(ROOT / path, errors)
 
+        for field in ("display_native_width", "display_native_height", "display_ui_width", "display_ui_height"):
+            value = device.get(field)
+            if not isinstance(value, int) or isinstance(value, bool) or value < 1:
+                errors.append(f"Device {slug} {field} must be a positive integer")
+
         for field in ("panel_url", "stand_url"):
             url = str(device.get(field, "")).strip()
             if url and not url.startswith("https://"):
                 errors.append(f"Device {slug} {field} must be an https URL")
+
+        device_yaml_path = check_relative_path(device.get("device_yaml"), f"Device {slug} device_yaml", errors)
+        package_yaml_path = check_relative_path(device.get("package_yaml"), f"Device {slug} package_yaml", errors)
+        if not device_yaml_path or not package_yaml_path:
+            continue
+        device_yaml = read(ROOT / device_yaml_path, errors)
+        package_yaml = read(ROOT / package_yaml_path, errors)
+
+        for field, needle in (
+            ("esp32_variant", f'variant: {device.get("esp32_variant", "")}'),
+            ("flash_size", f'flash_size: {device.get("flash_size", "")}'),
+            ("esp32_hosted_variant", f'variant: {device.get("esp32_hosted_variant", "")}'),
+            ("psram_mode", f'mode: {device.get("psram_mode", "")}'),
+            ("psram_speed", f'speed: {device.get("psram_speed", "")}'),
+            ("display_panel", f'model: {device.get("display_panel", "")}'),
+            ("touch_platform", f'platform: {device.get("touch_platform", "")}'),
+        ):
+            if str(device.get(field, "")).strip():
+                require_contains(device_yaml, needle, rel(ROOT / device_yaml_path), errors)
+
+        native_width = device.get("display_native_width")
+        native_height = device.get("display_native_height")
+        ui_width = device.get("display_ui_width")
+        ui_height = device.get("display_ui_height")
+        if isinstance(native_width, int):
+            require_contains(device_yaml, f"width: {native_width}", rel(ROOT / device_yaml_path), errors)
+        if isinstance(native_height, int):
+            require_contains(device_yaml, f"height: {native_height}", rel(ROOT / device_yaml_path), errors)
+        if isinstance(ui_width, int):
+            require_contains(package_yaml, f'display_width: "{ui_width}"', rel(ROOT / package_yaml_path), errors)
+        if isinstance(ui_height, int):
+            require_contains(package_yaml, f'display_height: "{ui_height}"', rel(ROOT / package_yaml_path), errors)
 
 
 def check_project_metadata(product: dict, errors: list[str]) -> None:
