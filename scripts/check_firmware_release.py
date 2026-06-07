@@ -70,7 +70,7 @@ def make_release_files(base: Path, slug: str = SLUG, version: str = VERSION) -> 
     factory = base / f"{slug}.factory.bin"
     ota = base / f"{slug}.ota.bin"
     manifest = base / f"{slug}.manifest.json"
-    chip = "ESP32-P4" if slug in {"immich-frame", "immich-frame-7inch"} else CHIP
+    chip = "ESP32-P4" if slug == "immich-frame" else CHIP
     write_release_image(factory, version)
     write_release_image(ota, version)
     run_ok([
@@ -276,9 +276,6 @@ def test_public_pages_verification() -> None:
         manifest, _, _ = make_release_files(firmware_dir, slug="immich-frame")
         manifest.rename(firmware_dir / "manifest.json")
 
-        manifest_7inch, _, _ = make_release_files(firmware_dir, slug="immich-frame-7inch")
-        manifest_7inch.rename(firmware_dir / "manifest-7inch.json")
-
         beta_dir = firmware_dir / "beta"
         beta_dir.mkdir()
         beta_manifest, _, _ = make_release_files(beta_dir, slug="immich-frame", version=BETA_VERSION)
@@ -288,7 +285,7 @@ def test_public_pages_verification() -> None:
             "verify-directory",
             "--version", VERSION,
             "--dir", str(firmware_dir),
-            "--slugs", "immich-frame", "immich-frame-7inch",
+            "--slugs", "immich-frame",
         ])
 
         handler = partial(QuietHandler, directory=str(base))
@@ -300,7 +297,7 @@ def test_public_pages_verification() -> None:
                 "verify-pages",
                 "--version", VERSION,
                 "--base-url", f"http://127.0.0.1:{server.server_port}",
-                "--slugs", "immich-frame", "immich-frame-7inch",
+                "--slugs", "immich-frame",
             ])
         finally:
             server.shutdown()

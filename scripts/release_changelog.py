@@ -59,7 +59,6 @@ CATEGORIES = (
         "Immich slideshow and photo handling",
         paths=(
             "common/addon/immich_",
-            "devices/guition-esp32-p4-jc1060p470/device/screen_slideshow.yaml",
             "devices/guition-esp32-p4-jc8012p4a1/device/screen_slideshow.yaml",
             "components/remote_image/",
         ),

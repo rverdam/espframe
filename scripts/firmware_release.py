@@ -48,14 +48,6 @@ DEVICES = {
         public_manifest="firmware/manifest.json",
         public_beta_manifest="firmware/beta/manifest.json",
     ),
-    "immich-frame-7inch": Device(
-        slug="immich-frame-7inch",
-        name="Immich Frame 7-inch",
-        chip="ESP32-P4",
-        build_yaml="builds/guition-esp32-p4-jc1060p470.factory.yaml",
-        public_manifest="firmware/manifest-7inch.json",
-        public_beta_manifest="firmware/beta/manifest-7inch.json",
-    ),
 }
 
 

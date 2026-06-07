@@ -10,7 +10,7 @@ permissions:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  DEVICE_SLUGS: immich-frame immich-frame-7inch
+  DEVICE_SLUGS: immich-frame
 
 jobs:
   release-notes:
@@ -46,10 +46,6 @@ jobs:
           - slug: immich-frame
             yaml: guition-esp32-p4-jc8012p4a1
             build_name: immich-frame-10inch
-            chip: ESP32-P4
-          - slug: immich-frame-7inch
-            yaml: guition-esp32-p4-jc1060p470
-            build_name: immich-frame-7inch
             chip: ESP32-P4
     steps:
       - uses: actions/checkout@v6
