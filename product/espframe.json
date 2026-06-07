@@ -115,8 +115,12 @@
     ],
     "compatibility_fixture_files": {
       "accepted": [
+        "tests/fixtures/compat/espframe-config-v1-older-saved-settings.json",
         "tests/fixtures/compat/espframe-config-v1-partial-unknown-fields.json",
-        "tests/fixtures/compat/espframe-config-v1-missing-groups.json"
+        "tests/fixtures/compat/espframe-config-v1-missing-groups.json",
+        "tests/fixtures/compat/espframe-config-v1-developer-options.json",
+        "tests/fixtures/compat/espframe-config-v1-future-unknown-fields.json",
+        "tests/fixtures/compat/espframe-config-v1-malformed-noncritical-values.json"
       ],
       "rejected_fields": [
         {
