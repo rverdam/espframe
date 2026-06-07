@@ -64,6 +64,19 @@ def require_contains(text: str, needle: str, label: str, errors: list[str]) -> N
         errors.append(f"{label} is missing {needle!r}")
 
 
+def require_firmware_text_entity_shape(text: str, name: str, filename: str, errors: list[str]) -> None:
+    block = firmware_entity_block(text, name, filename, errors)
+    if not block:
+        return
+    for needle in (
+        "optimistic: false",
+        "restore_value: true",
+        "min_length: 0",
+        "mode: text",
+    ):
+        require_contains(block, needle, f"{filename} text entity {name}", errors)
+
+
 def require_workflow_path_filter(text: str, path: str, label: str, errors: list[str]) -> None:
     needles = (f'- "{path}"', f"- '{path}'", f"- {path}")
     if not any(needle in text for needle in needles):
@@ -2200,6 +2213,7 @@ def check_clock_time_metadata(product: dict, errors: list[str]) -> None:
         key = f"ntp_server_{index}"
         require_contains(time_yaml, f'  {key}: "{server}"', rel(TIME_YAML), errors)
         require_contains(time_yaml, f'initial_value: "${{{key}}}"', rel(TIME_YAML), errors)
+        require_firmware_text_entity_shape(time_yaml, f"Clock: NTP Server {index}", rel(TIME_YAML), errors)
         require_contains(
             web_template,
             f'{{ key: "{key}", placeholder: "{server}", label: "NTP Server {index}" }}',
@@ -2342,6 +2356,8 @@ def check_photo_source_metadata(product: dict, errors: list[str]) -> None:
         "Apply Photo Source",
     ):
         require_contains(filter_yaml, needle, "common/addon/immich_filter.yaml", errors)
+    for name in ("Photos: Album IDs", "Photos: Album Labels", "Photos: Person IDs", "Photos: Person Labels"):
+        require_firmware_text_entity_shape(filter_yaml, name, "common/addon/immich_filter.yaml", errors)
     for needle in (
         "immich_memory_window_offset",
         "id(immich_memory_window_offset) = -2",
@@ -4357,6 +4373,8 @@ def check_setting(setting: dict, web_text: str, errors: list[str]) -> None:
         if entity.get("domain") == "switch" and isinstance(raw_default, bool):
             restore_mode = "RESTORE_DEFAULT_ON" if raw_default else "RESTORE_DEFAULT_OFF"
             require_contains(block, f"restore_mode: {restore_mode}", f"{filename} restore_mode for {key}", errors)
+        if entity.get("domain") == "text":
+            require_firmware_text_entity_shape(text, name, str(filename), errors)
 
     docs_files = check_path_list(setting, key, "docs_files", errors)
     for filename in docs_files:
