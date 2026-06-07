@@ -485,6 +485,12 @@
       "docs.deploy-docs": ["build-docs", "download-firmware"],
       "release.publish": ["build-firmware"]
     },
+    "github_sparse_checkout_files": [
+      "scripts/firmware_release.py",
+      "scripts/product_config.py",
+      "product/espframe.json"
+    ],
+    "github_sparse_checkout_cone_mode": false,
     "firmware_compile_timeout_minutes": 30,
     "esphome_version": "2026.5.0"
   },

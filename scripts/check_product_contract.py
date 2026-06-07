@@ -813,6 +813,21 @@ def check_project_metadata(product: dict, errors: list[str]) -> None:
                 errors.append(f"project.github_workflow_job_dependencies.{key or '<missing>'} must only contain non-empty strings")
             if len(dependencies) != len(set(dependencies)):
                 errors.append(f"project.github_workflow_job_dependencies.{key or '<missing>'} must not contain duplicate jobs")
+    sparse_checkout_files = project.get("github_sparse_checkout_files", [])
+    if not isinstance(sparse_checkout_files, list) or not sparse_checkout_files:
+        errors.append("project.github_sparse_checkout_files must be a non-empty list")
+    else:
+        paths = [str(path).strip() for path in sparse_checkout_files]
+        if any(not path for path in paths):
+            errors.append("project.github_sparse_checkout_files must only contain non-empty strings")
+        if len(paths) != len(set(paths)):
+            errors.append("project.github_sparse_checkout_files must not contain duplicate paths")
+        for raw_path in paths:
+            path = check_relative_path(raw_path, "project.github_sparse_checkout_files entry", errors)
+            if path:
+                read(ROOT / path, errors)
+    if not isinstance(project.get("github_sparse_checkout_cone_mode"), bool):
+        errors.append("project.github_sparse_checkout_cone_mode must be true or false")
     release_asset_suffixes = project.get("release_asset_suffixes", [])
     if not isinstance(release_asset_suffixes, list) or not release_asset_suffixes:
         errors.append("project.release_asset_suffixes must be a non-empty list")
@@ -2960,6 +2975,10 @@ def check_device_workflow_contract(product: dict, errors: list[str]) -> None:
     pages_environment = str(project.get("github_pages_environment", "")).strip()
     pages_concurrency_group = str(project.get("github_pages_concurrency_group", "")).strip()
     pages_cancel_in_progress = project.get("github_pages_cancel_in_progress")
+    sparse_checkout_files = [
+        str(path).strip() for path in project.get("github_sparse_checkout_files", []) if str(path).strip()
+    ]
+    sparse_checkout_cone_mode = project.get("github_sparse_checkout_cone_mode")
     docs_verify_retries = project.get("docs_firmware_verify_retries")
     docs_verify_delay = project.get("docs_firmware_verify_delay_seconds")
     actions_runner = str(project.get("github_actions_runner", "")).strip()
@@ -2978,6 +2997,12 @@ def check_device_workflow_contract(product: dict, errors: list[str]) -> None:
         (".github/workflows/docs.yml", docs_workflow),
     ):
         require_contains(text, f"DEVICE_SLUGS: {expected_slugs}", label, errors)
+        if sparse_checkout_files:
+            require_contains(text, "sparse-checkout: |", label, errors)
+            for path in sparse_checkout_files:
+                require_contains(text, f"            {path}", label, errors)
+        if isinstance(sparse_checkout_cone_mode, bool):
+            require_contains(text, f"sparse-checkout-cone-mode: {str(sparse_checkout_cone_mode).lower()}", label, errors)
     if isinstance(release_actions, dict):
         for action in release_actions.values():
             if not isinstance(action, str) or not action.strip():
