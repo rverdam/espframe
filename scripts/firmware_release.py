@@ -21,14 +21,19 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from urllib.parse import urljoin
 
-from product_config import devices_by_slug, project_value
+from product_config import devices_by_slug, load_product, project_value
 
 ROOT = Path(__file__).resolve().parent.parent
-FIRMWARE_VERSION_PLACEHOLDER = '  firmware_version: "0.0.0"'
-PLACEHOLDER_STRINGS = {"dev", "0.0.0", "main"}
+PRODUCT = load_product()
+PROJECT = PRODUCT["project"]
+FIRMWARE_VERSION_PLACEHOLDER = str(PROJECT.get("firmware_version_placeholder_line", '  firmware_version: "0.0.0"'))
+PLACEHOLDER_STRINGS = {
+    str(value)
+    for value in PROJECT.get("firmware_placeholder_versions", ["dev", "0.0.0", "main"])
+}
 RELEASE_URL_BASE = project_value("release_url_base", "https://github.com/jtenniswood/espframe/releases/tag/")
 PROJECT_NAME = project_value("package_name", "jtenniswood.immich-frame")
-RELEASE_VERSION_RE = re.compile(r"^v\d+\.\d+\.\d+(?:-[0-9A-Za-z][0-9A-Za-z.-]*)?$")
+RELEASE_VERSION_RE = re.compile(str(PROJECT.get("release_version_pattern", r"^v\d+\.\d+\.\d+(?:-[0-9A-Za-z][0-9A-Za-z.-]*)?$")))
 
 
 @dataclass(frozen=True)

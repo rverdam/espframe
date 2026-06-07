@@ -601,6 +601,9 @@ def check_project_metadata(product: dict, errors: list[str]) -> None:
         "repository_url",
         "release_url_base",
         "release_artifact_prefix",
+        "release_version_pattern",
+        "stable_release_version_pattern",
+        "firmware_version_placeholder_line",
         "public_base_url",
         "support_url",
         "support_button_image_url",
@@ -640,6 +643,20 @@ def check_project_metadata(product: dict, errors: list[str]) -> None:
         errors.append("project.release_asset_suffixes must be a non-empty list")
     elif any(not isinstance(suffix, str) or not suffix.strip() or not suffix.startswith(".") for suffix in release_asset_suffixes):
         errors.append("project.release_asset_suffixes must only contain non-empty dot-prefixed strings")
+    for field in ("release_version_pattern", "stable_release_version_pattern"):
+        pattern = str(project.get(field, "")).strip()
+        if pattern:
+            try:
+                re.compile(pattern)
+            except re.error as exc:
+                errors.append(f"project.{field} must be a valid regular expression: {exc}")
+    placeholder_versions = project.get("firmware_placeholder_versions", [])
+    if not isinstance(placeholder_versions, list) or not placeholder_versions:
+        errors.append("project.firmware_placeholder_versions must be a non-empty list")
+    elif any(not isinstance(value, str) or not value.strip() for value in placeholder_versions):
+        errors.append("project.firmware_placeholder_versions must only contain non-empty strings")
+    elif "0.0.0" not in placeholder_versions:
+        errors.append("project.firmware_placeholder_versions must include 0.0.0")
     for field in ("generated_asset_outputs", "generated_asset_sources", "web_template_placeholders", "web_local_state_keys"):
         values = project.get(field, [])
         if not isinstance(values, list) or not values:
@@ -2673,6 +2690,10 @@ def check_device_workflow_contract(product: dict, errors: list[str]) -> None:
     release_actions = project.get("release_workflow_actions", {})
     artifact_prefix = str(project.get("release_artifact_prefix", "")).strip()
     asset_suffixes = [str(value).strip() for value in project.get("release_asset_suffixes", []) if str(value).strip()]
+    release_version_pattern = str(project.get("release_version_pattern", "")).strip()
+    stable_release_version_pattern = str(project.get("stable_release_version_pattern", "")).strip()
+    firmware_version_placeholder = str(project.get("firmware_version_placeholder_line", "")).rstrip("\n")
+    placeholder_versions = [str(value).strip() for value in project.get("firmware_placeholder_versions", []) if str(value).strip()]
     docs_dist_artifact_name = str(project.get("docs_dist_artifact_name", "")).strip()
     docs_firmware_artifact_name = str(project.get("docs_firmware_artifact_name", "")).strip()
     docs_verify_retries = project.get("docs_firmware_verify_retries")
@@ -2715,6 +2736,20 @@ def check_device_workflow_contract(product: dict, errors: list[str]) -> None:
         if suffix == ".manifest.json":
             require_contains(docs_workflow, suffix, ".github/workflows/docs.yml", errors)
         require_contains(read(ROOT / "scripts" / "firmware_release.py", errors), suffix, "scripts/firmware_release.py", errors)
+    firmware_release_script = read(ROOT / "scripts" / "firmware_release.py", errors)
+    release_changelog_script = read(ROOT / "scripts" / "release_changelog.py", errors)
+    if release_version_pattern:
+        require_contains(firmware_release_script, "release_version_pattern", "scripts/firmware_release.py", errors)
+    if stable_release_version_pattern:
+        require_contains(release_changelog_script, "stable_release_version_pattern", "scripts/release_changelog.py", errors)
+    if firmware_version_placeholder:
+        require_contains(firmware_release_script, "firmware_version_placeholder_line", "scripts/firmware_release.py", errors)
+        for device in product["devices"]:
+            build_yaml = check_relative_path(device.get("build_yaml"), f"Device {device.get('slug', '<missing>')} build_yaml", errors)
+            if build_yaml:
+                require_contains(read(ROOT / build_yaml, errors), firmware_version_placeholder, build_yaml, errors)
+    if placeholder_versions:
+        require_contains(firmware_release_script, "firmware_placeholder_versions", "scripts/firmware_release.py", errors)
     if docs_dist_artifact_name:
         require_contains(docs_workflow, f"name: {docs_dist_artifact_name}", ".github/workflows/docs.yml", errors)
     if docs_firmware_artifact_name:
