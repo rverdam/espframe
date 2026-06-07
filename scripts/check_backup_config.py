@@ -13,6 +13,7 @@ from product_config import load_product
 
 
 ROOT = Path(__file__).resolve().parent.parent
+WEB_SRC_DIR = ROOT / "docs" / "webserver" / "src"
 WEB_TEMPLATE = ROOT / "docs" / "webserver" / "src" / "app.template.js"
 WEB_APP = ROOT / "docs" / "public" / "webserver" / "app.js"
 UUID_LIST_RE = re.compile(
@@ -136,6 +137,14 @@ def load_json(path: Path, errors: list[str]) -> dict[str, Any]:
 def require_contains(text: str, needle: str, label: str, errors: list[str]) -> None:
     if needle not in text:
         errors.append(f"{label} is missing {needle!r}")
+
+
+def web_source_text() -> str:
+    files = [WEB_TEMPLATE] + sorted(
+        path for path in WEB_SRC_DIR.glob("*.js")
+        if path.name != WEB_TEMPLATE.name
+    )
+    return "\n".join(path.read_text() for path in files)
 
 
 def setting_options(product: dict[str, Any]) -> dict[str, set[str]]:
@@ -279,7 +288,7 @@ def validate_fixture(
 
 
 def validate_web_support(product: dict[str, Any], errors: list[str]) -> None:
-    template = WEB_TEMPLATE.read_text()
+    template = web_source_text()
     app = WEB_APP.read_text()
     labels_and_text = ((rel(WEB_TEMPLATE), template), (rel(WEB_APP), app))
     for label, text in labels_and_text:

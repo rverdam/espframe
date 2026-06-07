@@ -41,6 +41,15 @@ TZ_HEADER_PATH = ROOT / "components" / "espframe" / "tz_data_generated.h"
 TIME_YAML_PATH = ROOT / "common" / "addon" / "time.yaml"
 WEB_SRC_DIR = ROOT / "docs" / "webserver" / "src"
 WEB_TEMPLATE_PATH = WEB_SRC_DIR / "app.template.js"
+WEB_MODULE_PATHS = {
+    "__ESPFRAME_WEB_APP_SHELL__": WEB_SRC_DIR / "app_shell.js",
+    "__ESPFRAME_WEB_ENDPOINTS__": WEB_SRC_DIR / "endpoints.js",
+    "__ESPFRAME_WEB_RUNTIME_STATE__": WEB_SRC_DIR / "runtime_state.js",
+    "__ESPFRAME_WEB_STARTUP_WIZARD__": WEB_SRC_DIR / "startup_wizard.js",
+    "__ESPFRAME_WEB_SETTINGS_CONTROLS__": WEB_SRC_DIR / "settings_controls.js",
+    "__ESPFRAME_WEB_LIVE_HELPERS__": WEB_SRC_DIR / "live_helpers.js",
+    "__ESPFRAME_WEB_BACKUP_IMPORT__": WEB_SRC_DIR / "backup_import.js",
+}
 WEB_COMPAT_HELPERS_PATH = WEB_SRC_DIR / "compat.js"
 WEB_STYLE_PATH = WEB_SRC_DIR / "style.css"
 WEB_PUBLIC_STYLE_PATH = ROOT / "docs" / "public" / "webserver" / "style.css"
@@ -168,11 +177,16 @@ def bootstrap_webserver_sources() -> None:
 
 
 def web_app_bundle() -> str:
-    if not WEB_TEMPLATE_PATH.exists() or not WEB_COMPAT_HELPERS_PATH.exists() or not WEB_STYLE_PATH.exists():
+    source_paths = [WEB_TEMPLATE_PATH, WEB_COMPAT_HELPERS_PATH, WEB_STYLE_PATH, *WEB_MODULE_PATHS.values()]
+    if not all(path.exists() for path in source_paths):
         raise RuntimeError("Webserver sources are missing. Run with --bootstrap-webserver once.")
 
     template = WEB_TEMPLATE_PATH.read_text()
     compat_helpers = WEB_COMPAT_HELPERS_PATH.read_text().rstrip("\n")
+    web_modules = {
+        placeholder: path.read_text().rstrip("\n")
+        for placeholder, path in WEB_MODULE_PATHS.items()
+    }
     css = WEB_STYLE_PATH.read_text().rstrip("\n")
     timezones_json = json.dumps(timezone_options(), separators=(",", ":"))
     timezone_labels_json = json.dumps(timezone_labels(), separators=(",", ":"))
@@ -191,8 +205,11 @@ def web_app_bundle() -> str:
     support_url_json = json.dumps(project_value("support_url"), separators=(",", ":"))
     support_button_image_url_json = json.dumps(project_value("support_button_image_url"), separators=(",", ":"))
     css_json = json.dumps(css, separators=(",", ":"))
+    bundle = template
+    for placeholder, module_source in web_modules.items():
+        bundle = bundle.replace(placeholder, module_source)
     return (
-        template
+        bundle
         .replace("__ESPFRAME_TIMEZONES__", timezones_json)
         .replace("__ESPFRAME_TIMEZONE_LABELS__", timezone_labels_json)
         .replace("__ESPFRAME_PRODUCT_SETTINGS__", product_settings_json)

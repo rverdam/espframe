@@ -106,7 +106,7 @@
   var els = {};
   var app;
 
-  function ensureFavicon() {
+    function ensureFavicon() {
     var icon = document.querySelector('link[rel="icon"]') || document.createElement("link");
     icon.rel = "icon";
     icon.type = "image/svg+xml";
@@ -258,7 +258,7 @@
     els.logsPage.className = "sp-page" + (tab === "logs" ? " active" : "");
   }
 
-  function eid(domain, name) {
+    function eid(domain, name) {
     return "/" + domain + "/" + encodeURIComponent(name);
   }
 
@@ -565,7 +565,7 @@ if (typeof module !== "undefined") {
 
   // --- SSE-based init ---
 
-  var evtSource = null;
+    var evtSource = null;
   var rendered = false;
   var renderTimer = null;
   var renderAttemptInFlight = false;
@@ -887,7 +887,7 @@ if (typeof module !== "undefined") {
 
   // --- Wizard ---
 
-  function renderWizard() {
+    function renderWizard() {
     var step = 1;
     immichApp.innerHTML = "";
     app.innerHTML = "";
@@ -1036,7 +1036,7 @@ if (typeof module !== "undefined") {
 
   // --- Settings ---
 
-  function renderSettings() {
+    function renderSettings() {
     app.innerHTML = "";
     immichApp.innerHTML = "";
     var immichWrap = el("div", "fade-in");
@@ -2238,7 +2238,7 @@ if (typeof module !== "undefined") {
 
   }
 
-  // --- SSE live updates (after render) ---
+    // --- SSE live updates (after render) ---
 
   function handleLiveEvent(d) {
     if (!d || !d.id) return;
@@ -2494,7 +2494,7 @@ if (typeof module !== "undefined") {
     bannerTimer = setTimeout(function () { els.banner.style.display = "none"; }, 5000);
   }
 
-  // --- Import / Export ---
+    // --- Import / Export ---
 
   function exportConfig() {
     var data = {

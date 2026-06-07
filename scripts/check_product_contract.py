@@ -39,6 +39,7 @@ from product_config import (
 
 
 ROOT = Path(__file__).resolve().parent.parent
+WEB_SRC_DIR = ROOT / "docs" / "webserver" / "src"
 WEB_TEMPLATE = ROOT / "docs" / "webserver" / "src" / "app.template.js"
 WEB_APP = ROOT / "docs" / "public" / "webserver" / "app.js"
 TIME_YAML = ROOT / "common" / "addon" / "time.yaml"
@@ -61,6 +62,14 @@ def read(path: Path, errors: list[str]) -> str:
         errors.append(f"Missing file: {rel(path)}")
         return ""
     return path.read_text()
+
+
+def read_web_source(errors: list[str]) -> str:
+    files = [WEB_TEMPLATE] + sorted(
+        path for path in WEB_SRC_DIR.glob("*.js")
+        if path.name != WEB_TEMPLATE.name
+    )
+    return "\n".join(read(path, errors) for path in files)
 
 
 def require_contains(text: str, needle: str, label: str, errors: list[str]) -> None:
@@ -1529,6 +1538,8 @@ def check_npm_package_metadata(product: dict, errors: list[str]) -> None:
             errors.append("package.json check:compat must run scripts/check_compatibility.py")
         if scripts.get("test:web-compat") != "node tests/web_compat_tests.js":
             errors.append("package.json test:web-compat must run tests/web_compat_tests.js")
+        if scripts.get("test:web-modules") != "node tests/web_module_tests.js":
+            errors.append("package.json test:web-modules must run tests/web_module_tests.js")
         check_all = str(scripts.get("check:all", ""))
         if "npm run check:backup" not in check_all:
             errors.append("package.json check:all must include check:backup")
@@ -1536,6 +1547,8 @@ def check_npm_package_metadata(product: dict, errors: list[str]) -> None:
             errors.append("package.json check:all must include check:compat")
         if "npm run test:web-compat" not in check_all:
             errors.append("package.json check:all must include test:web-compat")
+        if "npm run test:web-modules" not in check_all:
+            errors.append("package.json check:all must include test:web-modules")
     if package_lock.get("name") != expected_name:
         errors.append("package-lock.json name must match project.npm_package_name")
     root_package = package_lock.get("packages", {}).get("", {})
@@ -1769,7 +1782,7 @@ def check_firmware_update_metadata(product: dict, errors: list[str]) -> None:
     firmware_docs = read(ROOT / "docs" / "firmware-update.md", errors)
     backup_docs = read(ROOT / "docs" / "backup.md", errors)
     firmware_yaml = read(ROOT / "common" / "addon" / "firmware_update.yaml", errors)
-    web_template = read(WEB_TEMPLATE, errors)
+    web_template = read_web_source(errors)
     web_text = read(WEB_APP, errors)
 
     for method in methods if isinstance(methods, list) else []:
@@ -1888,7 +1901,7 @@ def check_backup_metadata(product: dict, errors: list[str]) -> None:
     invalid_photo_id_behavior = str(project.get("backup_invalid_photo_id_behavior", "")).strip()
 
     backup_docs = read(ROOT / "docs" / "backup.md", errors)
-    web_template = read(WEB_TEMPLATE, errors)
+    web_template = read_web_source(errors)
     web_text = read(WEB_APP, errors)
 
     if isinstance(config_version, int) and not isinstance(config_version, bool):
@@ -2023,7 +2036,7 @@ def check_screen_schedule_metadata(product: dict, errors: list[str]) -> None:
     screen_settings_docs = read(ROOT / "docs" / "screen-settings.md", errors)
     backup_docs = read(ROOT / "docs" / "backup.md", errors)
     backlight_schedule_yaml = read(ROOT / "common" / "addon" / "backlight_schedule.yaml", errors)
-    web_template = read(WEB_TEMPLATE, errors)
+    web_template = read_web_source(errors)
 
     if day_night_source:
         require_contains(screen_settings_docs, day_night_source, "docs/screen-settings.md", errors)
@@ -2088,7 +2101,7 @@ def check_screen_rotation_metadata(product: dict, errors: list[str]) -> None:
     backup_docs = read(ROOT / "docs" / "backup.md", errors)
     rotation_yaml = read(ROOT / "common" / "addon" / "screen_rotation.yaml", errors)
     developer_yaml = read(ROOT / "common" / "addon" / "developer_features.yaml", errors)
-    web_template = read(WEB_TEMPLATE, errors)
+    web_template = read_web_source(errors)
 
     if feature_source:
         require_contains(screen_docs, feature_source, "docs/screen-settings.md", errors)
@@ -2160,7 +2173,7 @@ def check_developer_features_metadata(product: dict, errors: list[str]) -> None:
 
     readme = read(ROOT / "README.md", errors)
     developer_yaml = read(ROOT / "common" / "addon" / "developer_features.yaml", errors)
-    web_template = read(WEB_TEMPLATE, errors)
+    web_template = read_web_source(errors)
     web_text = read(WEB_APP, errors)
 
     if query_value:
@@ -2213,7 +2226,7 @@ def check_screen_tone_metadata(product: dict, errors: list[str]) -> None:
     backup_docs = read(ROOT / "docs" / "backup.md", errors)
     warm_tones_yaml = read(ROOT / "common" / "addon" / "warm_tones.yaml", errors)
     slideshow_yaml = read(ROOT / "common" / "addon" / "immich_slideshow.yaml", errors)
-    web_template = read(WEB_TEMPLATE, errors)
+    web_template = read_web_source(errors)
 
     if base_purpose:
         require_contains(screen_tone_docs, base_purpose, "docs/screen-tone.md", errors)
@@ -2299,7 +2312,7 @@ def check_clock_time_metadata(product: dict, errors: list[str]) -> None:
     index_docs = read(ROOT / "docs" / "index.md", errors)
     backup_docs = read(ROOT / "docs" / "backup.md", errors)
     time_yaml = read(TIME_YAML, errors)
-    web_template = read(WEB_TEMPLATE, errors)
+    web_template = read_web_source(errors)
     web_text = read(WEB_APP, errors)
 
     for needle in (
@@ -2414,7 +2427,7 @@ def check_photo_source_metadata(product: dict, errors: list[str]) -> None:
     backup_docs = read(ROOT / "docs" / "backup.md", errors)
     filter_yaml = read(ROOT / "common" / "addon" / "immich_filter.yaml", errors)
     api_yaml = read(ROOT / "common" / "addon" / "immich_api.yaml", errors)
-    web_template = read(WEB_TEMPLATE, errors)
+    web_template = read_web_source(errors)
 
     if auto_apply_behavior:
         require_contains(photo_docs, auto_apply_behavior, "docs/photo-sources.md", errors)
@@ -2545,7 +2558,7 @@ def check_connection_resilience_metadata(product: dict, errors: list[str]) -> No
     immich_config_yaml = read(ROOT / "common" / "addon" / "immich_config.yaml", errors)
     helper_header = read(ROOT / "components" / "espframe" / "espframe_helpers.h", errors)
     helper_tests = read(ROOT / "tests" / "espframe_helper_tests.cpp", errors)
-    web_template = read(WEB_TEMPLATE, errors)
+    web_template = read_web_source(errors)
 
     for needle in (timeout_default, timeout_range, failure_trigger, invalid_key_title, unavailable_title):
         if needle:
@@ -2686,7 +2699,7 @@ def check_setup_flow_metadata(product: dict, errors: list[str]) -> None:
     usb_docs = read(ROOT / "docs" / "usb-flashing.md", errors)
     manual_setup_docs = read(ROOT / "docs" / "manual-setup.md", errors)
     immich_frame_docs = read(ROOT / "docs" / "immich-photo-frame.md", errors)
-    web_template = read(WEB_TEMPLATE, errors)
+    web_template = read_web_source(errors)
     connectivity_yaml = read(ROOT / "common" / "addon" / "connectivity.yaml", errors)
     immich_config_yaml = read(ROOT / "common" / "addon" / "immich_config.yaml", errors)
     screen_loading_yaml = read(ROOT / "devices" / "guition-esp32-p4-jc8012p4a1" / "device" / "screen_loading.yaml", errors)
@@ -2834,7 +2847,7 @@ def check_photo_display_metadata(product: dict, errors: list[str]) -> None:
     readme = read(ROOT / "README.md", errors)
     index_docs = read(ROOT / "docs" / "index.md", errors)
     photo_docs = read(ROOT / "docs" / "photo-sources.md", errors)
-    web_template = read(WEB_TEMPLATE, errors)
+    web_template = read_web_source(errors)
     filter_yaml = read(ROOT / "common" / "addon" / "immich_filter.yaml", errors)
     api_yaml = read(ROOT / "common" / "addon" / "immich_api.yaml", errors)
     slideshow_yaml = read(ROOT / "common" / "addon" / "immich_slideshow.yaml", errors)
@@ -3662,7 +3675,7 @@ def check_generated_asset_metadata(product: dict, errors: list[str]) -> None:
     placeholders = [str(value).strip() for value in project.get("web_template_placeholders", []) if str(value).strip()]
 
     generator = read(ROOT / "scripts" / "generate_assets.py", errors)
-    web_template = read(WEB_TEMPLATE, errors)
+    web_template = read_web_source(errors)
     package_json = read(ROOT / "package.json", errors)
 
     expected_outputs = {
@@ -3674,7 +3687,14 @@ def check_generated_asset_metadata(product: dict, errors: list[str]) -> None:
     expected_sources = {
         "components/espframe/timezones.py",
         "docs/webserver/src/app.template.js",
+        "docs/webserver/src/app_shell.js",
+        "docs/webserver/src/backup_import.js",
         "docs/webserver/src/compat.js",
+        "docs/webserver/src/endpoints.js",
+        "docs/webserver/src/live_helpers.js",
+        "docs/webserver/src/runtime_state.js",
+        "docs/webserver/src/settings_controls.js",
+        "docs/webserver/src/startup_wizard.js",
         "docs/webserver/src/style.css",
         "product/espframe.json",
         "scripts/product_config.py",
@@ -4706,7 +4726,7 @@ def check_setting(setting: dict, web_text: str, errors: list[str]) -> None:
 
 
 def check_settings(product: dict, errors: list[str]) -> None:
-    web_template = read(WEB_TEMPLATE, errors)
+    web_template = read_web_source(errors)
     web_text = read(WEB_APP, errors)
     check_web_entity_metadata(product, errors)
     check_manual_web_entity_metadata(product, errors)
