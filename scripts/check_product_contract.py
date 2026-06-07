@@ -216,6 +216,8 @@ def check_setting_schema(setting: dict, errors: list[str]) -> None:
             errors.append(f"Number setting {key} default must be within min/max")
         if step <= 0:
             errors.append(f"Number setting {key} step must be greater than zero")
+        elif abs(((default - minimum) / step) - round((default - minimum) / step)) > 1e-9:
+            errors.append(f"Number setting {key} default must align with min/step")
         if options or developer_options:
             errors.append(f"Number setting {key} must not define options")
     elif domain == "switch":
