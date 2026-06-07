@@ -394,6 +394,7 @@
     "release_changelog_fallback_category": "Other changes",
     "docs_firmware_verify_retries": 10,
     "docs_firmware_verify_delay_seconds": 15,
+    "github_docs_release_meta_step_id": "release-meta",
     "github_docs_release_tag_env": "RELEASE_TAG",
     "github_docs_release_tag_output": "release_tag",
     "github_docs_prerelease_tag_env": "BETA_TAG",
@@ -404,6 +405,8 @@
     "github_pages_environment": "github-pages",
     "github_pages_concurrency_group": "pages",
     "github_pages_cancel_in_progress": false,
+    "github_pages_deployment_step_id": "deployment",
+    "github_pages_url_output": "page_url",
     "github_prerelease_lookup_limit": 20,
     "generated_asset_outputs": [
       "components/espframe/tz_data_generated.h",

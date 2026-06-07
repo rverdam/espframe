@@ -634,9 +634,12 @@ def check_project_metadata(product: dict, errors: list[str]) -> None:
         "node_install_command",
         "local_check_command",
         "docs_build_command",
+        "github_docs_release_meta_step_id",
         "github_docs_release_tag_env",
         "github_docs_release_tag_output",
         "github_docs_prerelease_tag_env",
+        "github_pages_deployment_step_id",
+        "github_pages_url_output",
         "web_ui_logs_event_source",
         "web_ui_logs_event_name",
         "web_ui_logs_clear_label",
@@ -3080,9 +3083,12 @@ def check_device_workflow_contract(product: dict, errors: list[str]) -> None:
     sparse_checkout_cone_mode = project.get("github_sparse_checkout_cone_mode")
     docs_verify_retries = project.get("docs_firmware_verify_retries")
     docs_verify_delay = project.get("docs_firmware_verify_delay_seconds")
+    docs_release_meta_step_id = str(project.get("github_docs_release_meta_step_id", "")).strip()
     docs_release_tag_env = str(project.get("github_docs_release_tag_env", "")).strip()
     docs_release_tag_output = str(project.get("github_docs_release_tag_output", "")).strip()
     docs_prerelease_tag_env = str(project.get("github_docs_prerelease_tag_env", "")).strip()
+    pages_deployment_step_id = str(project.get("github_pages_deployment_step_id", "")).strip()
+    pages_url_output = str(project.get("github_pages_url_output", "")).strip()
     prerelease_lookup_limit = project.get("github_prerelease_lookup_limit")
     actions_runner = str(project.get("github_actions_runner", "")).strip()
     github_cli_env = project.get("github_cli_env", {})
@@ -3294,6 +3300,14 @@ def check_device_workflow_contract(product: dict, errors: list[str]) -> None:
     if pages_environment:
         require_contains(docs_workflow, "environment:", ".github/workflows/docs.yml", errors)
         require_contains(docs_workflow, f"name: {pages_environment}", ".github/workflows/docs.yml", errors)
+    if pages_deployment_step_id and pages_url_output:
+        require_contains(docs_workflow, f"id: {pages_deployment_step_id}", ".github/workflows/docs.yml", errors)
+        require_contains(
+            docs_workflow,
+            f"url: ${{{{ steps.{pages_deployment_step_id}.outputs.{pages_url_output} }}}}",
+            ".github/workflows/docs.yml",
+            errors,
+        )
     if pages_concurrency_group:
         require_contains(docs_workflow, "concurrency:", ".github/workflows/docs.yml", errors)
         require_contains(docs_workflow, f"group: {pages_concurrency_group}", ".github/workflows/docs.yml", errors)
@@ -3331,6 +3345,14 @@ def check_device_workflow_contract(product: dict, errors: list[str]) -> None:
         ):
             require_contains(docs_workflow, needle, ".github/workflows/docs.yml", errors)
     if docs_release_tag_env and docs_release_tag_output:
+        if docs_release_meta_step_id:
+            require_contains(docs_workflow, f"id: {docs_release_meta_step_id}", ".github/workflows/docs.yml", errors)
+            require_contains(
+                docs_workflow,
+                f"{docs_release_tag_output}: ${{{{ steps.{docs_release_meta_step_id}.outputs.{docs_release_tag_output} }}}}",
+                ".github/workflows/docs.yml",
+                errors,
+            )
         require_contains(
             docs_workflow,
             f'echo "{docs_release_tag_output}=${{{docs_release_tag_env}}}" >> "$GITHUB_OUTPUT"',
