@@ -2749,6 +2749,16 @@ def check_photo_display_metadata(product: dict, errors: list[str]) -> None:
         if date_format:
             require_contains(web_template, f'placeholder = "{date_format}"', rel(WEB_TEMPLATE), errors)
             require_contains(web_template, f"Invalid date — use {date_format}", rel(WEB_TEMPLATE), errors)
+            require_contains(filter_yaml, f"name: \"{date_setting.get('entity', {}).get('name', '')}\"", "common/addon/immich_filter.yaml", errors)
+    date_formats = {
+        str(settings_by_key.get(key, {}).get("docs_format", "")).strip().strip("`")
+        for key in ("date_from", "date_to")
+    }
+    date_formats.discard("")
+    if len(date_formats) == 1:
+        date_length = len(next(iter(date_formats)))
+        if filter_yaml.count(f"max_length: {date_length}") < 2:
+            errors.append("common/addon/immich_filter.yaml must use date setting format length for date_from and date_to")
 
     if portrait_pairing_behavior:
         require_contains(readme, portrait_pairing_behavior, "README.md", errors)
