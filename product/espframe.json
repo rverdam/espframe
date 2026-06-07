@@ -74,6 +74,7 @@
       "default": "15 seconds",
       "docs_label": "Slideshow Interval",
       "docs_description": "How long each photo is shown before advancing (10 seconds to 10 minutes).",
+      "firmware_initial_option": "${immich_slide_interval}",
       "options": ["10 seconds", "15 seconds", "20 seconds", "30 seconds", "45 seconds", "1 minute", "2 minutes", "3 minutes", "5 minutes", "10 minutes"],
       "firmware_files": ["devices/guition-esp32-p4-jc8012p4a1/device/screen_slideshow.yaml"],
       "docs_files": ["docs/photo-sources.md"]
@@ -95,6 +96,7 @@
       "docs_label": "Rotation",
       "docs_default": "0 degrees",
       "docs_description": "Rotate the screen to 0 or 180 degrees.",
+      "firmware_initial_option": "${screen_rotation}",
       "options": ["0", "180"],
       "firmware_files": ["common/addon/screen_rotation.yaml"],
       "docs_files": ["docs/screen-settings.md"]

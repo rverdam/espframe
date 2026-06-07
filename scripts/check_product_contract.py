@@ -121,6 +121,16 @@ def check_setting(setting: dict, web_text: str, errors: list[str]) -> None:
         require_contains(text, f'name: "{name}"', f"{filename} entity for {key}", errors)
         for option in options:
             require_contains(text, f'"{option}"', f"{filename} option for {key}", errors)
+        if entity.get("domain") == "select":
+            initial_option = str(setting.get("firmware_initial_option", raw_default))
+            if initial_option.startswith("${"):
+                if (
+                    f"initial_option: {initial_option}" not in text
+                    and f'initial_option: "{initial_option}"' not in text
+                ):
+                    errors.append(f"{filename} initial_option for {key} is missing {initial_option!r}")
+            else:
+                require_contains(text, f'initial_option: "{initial_option}"', f"{filename} initial_option for {key}", errors)
         if entity.get("domain") == "number":
             for product_field, firmware_field in (
                 ("default", "initial_value"),
