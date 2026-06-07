@@ -616,6 +616,9 @@ def check_project_metadata(product: dict, errors: list[str]) -> None:
         "github_default_branch",
         "release_url_base",
         "release_artifact_prefix",
+        "release_build_output_dir",
+        "release_publish_dir",
+        "release_uploaded_verify_dir",
         "release_version_pattern",
         "stable_release_version_pattern",
         "firmware_version_placeholder_line",
@@ -2961,6 +2964,9 @@ def check_device_workflow_contract(product: dict, errors: list[str]) -> None:
     project = product["project"]
     release_actions = project.get("release_workflow_actions", {})
     artifact_prefix = str(project.get("release_artifact_prefix", "")).strip()
+    release_build_output_dir = str(project.get("release_build_output_dir", "")).strip()
+    release_publish_dir = str(project.get("release_publish_dir", "")).strip()
+    release_uploaded_verify_dir = str(project.get("release_uploaded_verify_dir", "")).strip()
     asset_suffixes = [str(value).strip() for value in project.get("release_asset_suffixes", []) if str(value).strip()]
     release_version_pattern = str(project.get("release_version_pattern", "")).strip()
     stable_release_version_pattern = str(project.get("stable_release_version_pattern", "")).strip()
@@ -3029,6 +3035,28 @@ def check_device_workflow_contract(product: dict, errors: list[str]) -> None:
     if artifact_prefix:
         require_contains(release_workflow, f"name: {artifact_prefix}${{{{ matrix.slug }}}}", ".github/workflows/release.yml", errors)
         require_contains(release_workflow, f"pattern: {artifact_prefix}*", ".github/workflows/release.yml", errors)
+    if release_build_output_dir:
+        for needle in (
+            f"mkdir -p {release_build_output_dir}",
+            f"path: {release_build_output_dir}/",
+            f'"{release_build_output_dir}/${{{{ matrix.slug }}}}.factory.bin"',
+            f'"{release_build_output_dir}/${{{{ matrix.slug }}}}.ota.bin"',
+            f'"{release_build_output_dir}/${{{{ matrix.slug }}}}.manifest.json"',
+        ):
+            require_contains(release_workflow, needle, ".github/workflows/release.yml", errors)
+    if release_publish_dir:
+        for needle in (
+            f"path: {release_publish_dir}",
+            f"--dir {release_publish_dir}",
+            f"{release_publish_dir}/* --clobber",
+        ):
+            require_contains(release_workflow, needle, ".github/workflows/release.yml", errors)
+    if release_uploaded_verify_dir:
+        for needle in (
+            f"mkdir -p {release_uploaded_verify_dir}",
+            f"--dir {release_uploaded_verify_dir}",
+        ):
+            require_contains(release_workflow, needle, ".github/workflows/release.yml", errors)
     for suffix in asset_suffixes:
         require_contains(release_workflow, suffix, ".github/workflows/release.yml", errors)
         if suffix == ".manifest.json":

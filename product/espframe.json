@@ -334,6 +334,9 @@
       "deploy_pages": "actions/deploy-pages@v5"
     },
     "release_artifact_prefix": "firmware-",
+    "release_build_output_dir": "output",
+    "release_publish_dir": "firmware",
+    "release_uploaded_verify_dir": "published",
     "release_asset_suffixes": [".factory.bin", ".ota.bin", ".manifest.json"],
     "release_version_pattern": "^v\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z][0-9A-Za-z.-]*)?$",
     "stable_release_version_pattern": "^v\\d+\\.\\d+\\.\\d+$",
