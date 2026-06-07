@@ -207,6 +207,8 @@ def check_devices(product: dict, errors: list[str]) -> None:
 
         for field in (
             "name",
+            "esphome_name",
+            "friendly_name",
             "chip",
             "build_yaml",
             "package_yaml",
@@ -306,6 +308,9 @@ def check_public_site_references(product: dict, errors: list[str]) -> None:
     manual_setup = read(ROOT / "docs" / "manual-setup.md", errors)
     license_docs = read(ROOT / "docs" / "license.md", errors)
     roadmap = read(ROOT / "docs" / "roadmap.md", errors)
+    install_docs = read(ROOT / "docs" / "install.md", errors)
+    troubleshooting_docs = read(ROOT / "docs" / "troubleshooting.md", errors)
+    usb_flashing_docs = read(ROOT / "docs" / "usb-flashing.md", errors)
     release_changelog = read(ROOT / "scripts" / "release_changelog.py", errors)
 
     require_contains(robots, f"Sitemap: {public_url('sitemap.xml', product)}", "docs/public/robots.txt", errors)
@@ -328,16 +333,35 @@ def check_public_site_references(product: dict, errors: list[str]) -> None:
 
     for device in product["devices"]:
         slug = str(device.get("slug", "")).strip()
+        esphome_name = str(device.get("esphome_name", "")).strip()
+        friendly_name = str(device.get("friendly_name", "")).strip()
         local_yaml = check_relative_path(device.get("local_yaml"), f"Device {slug} local_yaml", errors)
         package_yaml = check_relative_path(device.get("package_yaml"), f"Device {slug} package_yaml", errors)
         build_yaml = check_relative_path(device.get("build_yaml"), f"Device {slug} build_yaml", errors)
         device_yaml = check_relative_path(device.get("device_yaml"), f"Device {slug} device_yaml", errors)
+        if esphome_name:
+            for label, text in (
+                ("docs/install.md", install_docs),
+                ("docs/troubleshooting.md", troubleshooting_docs),
+                ("docs/usb-flashing.md", usb_flashing_docs),
+            ):
+                require_contains(text, esphome_name, label, errors)
         if package_yaml:
             require_contains(manual_setup, f"files: [{package_yaml}]", "docs/manual-setup.md", errors)
         if build_yaml:
             require_contains(readme, f"compile /config/{build_yaml}", "README.md compile example", errors)
+            build_text = read(ROOT / build_yaml, errors)
+            if esphome_name:
+                require_contains(build_text, f'name: "{esphome_name}"', build_yaml, errors)
+            if friendly_name:
+                require_contains(build_text, f'friendly_name: "{friendly_name}"', build_yaml, errors)
         if local_yaml and repository_url:
-            require_contains(read(ROOT / local_yaml, errors), f"url: {repository_url}", local_yaml, errors)
+            local_text = read(ROOT / local_yaml, errors)
+            if esphome_name:
+                require_contains(local_text, f'name: "{esphome_name}"', local_yaml, errors)
+            if friendly_name:
+                require_contains(local_text, f'friendly_name: "{friendly_name}"', local_yaml, errors)
+            require_contains(local_text, f"url: {repository_url}", local_yaml, errors)
         if device_yaml:
             device_text = read(ROOT / device_yaml, errors)
             require_contains(device_text, f'js_url: "{web_app_url}"', device_yaml, errors)
