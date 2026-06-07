@@ -4267,7 +4267,15 @@ def check_web_template_key_references(product: dict, web_template: str, errors: 
         if key in product_keys or key in static_keys:
             errors.append(f"project.web_local_state_keys {key} duplicates generated state metadata")
 
-    for key in sorted(set(WEB_STATE_REF_RE.findall(web_template))):
+    state_refs = set(WEB_STATE_REF_RE.findall(web_template))
+    unused_local_state_keys = sorted(local_state_keys - state_refs)
+    if unused_local_state_keys:
+        errors.append(
+            "project.web_local_state_keys contains keys not referenced by the web template: "
+            + ", ".join(unused_local_state_keys)
+        )
+
+    for key in sorted(state_refs):
         if key not in known_state_keys:
             errors.append(f"Web template references unknown state key S.{key}")
 
