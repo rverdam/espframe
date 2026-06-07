@@ -172,6 +172,12 @@ def check_backup_endpoint_mapping(product: dict[str, Any], errors: list[str]) ->
                 errors.append(f"Backup field {group}.{field} maps to unknown endpoint key {key}")
 
 
+def check_backup_version_contract(product: dict[str, Any], errors: list[str]) -> None:
+    version = product["project"].get("backup_config_version")
+    if version != 1:
+        errors.append("Phase 4 compatibility keeps backup_config_version at 1")
+
+
 def fixture_validation_errors(data: dict[str, Any], product: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     project = product["project"]
@@ -212,6 +218,31 @@ def fixture_validation_errors(data: dict[str, Any], product: dict[str, Any]) -> 
     return errors
 
 
+def check_accepted_fixture_group_coverage(
+    accepted_paths: list[str],
+    product: dict[str, Any],
+    errors: list[str],
+) -> None:
+    expected_groups = {str(group) for group in product["project"].get("backup_export_groups", [])}
+    covered_groups: set[str] = set()
+    for raw_path in accepted_paths:
+        path = ROOT / str(raw_path)
+        data = load_json(path, errors)
+        if not data:
+            continue
+        for group in expected_groups:
+            value = data.get(group)
+            if isinstance(value, dict) and value:
+                covered_groups.add(group)
+
+    missing_groups = sorted(expected_groups - covered_groups)
+    if missing_groups:
+        errors.append(
+            "Accepted compatibility fixtures must cover every backup group; missing: "
+            + ", ".join(missing_groups)
+        )
+
+
 def check_compatibility_fixtures(product: dict[str, Any], errors: list[str]) -> None:
     fixtures = product["project"].get("compatibility_fixture_files", {})
     if not isinstance(fixtures, dict) or not fixtures:
@@ -222,6 +253,8 @@ def check_compatibility_fixtures(product: dict[str, Any], errors: list[str]) -> 
     if not isinstance(accepted, list) or not accepted:
         errors.append("project.compatibility_fixture_files.accepted must be a non-empty list")
     else:
+        accepted_paths = [str(path) for path in accepted]
+        check_accepted_fixture_group_coverage(accepted_paths, product, errors)
         for raw_path in accepted:
             path = ROOT / str(raw_path)
             data = load_json(path, errors)
@@ -256,6 +289,7 @@ def main() -> int:
     product = load_product()
     errors: list[str] = []
     check_generated_web_metadata(product, errors)
+    check_backup_version_contract(product, errors)
     check_backup_endpoint_mapping(product, errors)
     check_compatibility_fixtures(product, errors)
 

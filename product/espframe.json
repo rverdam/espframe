@@ -115,6 +115,12 @@
     ],
     "compatibility_fixture_files": {
       "accepted": [
+        "tests/fixtures/compat/espframe-config-v1-connection-group.json",
+        "tests/fixtures/compat/espframe-config-v1-photos-group.json",
+        "tests/fixtures/compat/espframe-config-v1-frequency-group.json",
+        "tests/fixtures/compat/espframe-config-v1-firmware-updates-group.json",
+        "tests/fixtures/compat/espframe-config-v1-clock-group.json",
+        "tests/fixtures/compat/espframe-config-v1-screen-group.json",
         "tests/fixtures/compat/espframe-config-v1-older-saved-settings.json",
         "tests/fixtures/compat/espframe-config-v1-partial-unknown-fields.json",
         "tests/fixtures/compat/espframe-config-v1-missing-groups.json",
