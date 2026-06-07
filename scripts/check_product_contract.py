@@ -399,6 +399,15 @@ def check_project_metadata(product: dict, errors: list[str]) -> None:
             errors.append(f"project.{field} is required")
     if not isinstance(project.get("photo_source_id_limit"), int) or isinstance(project.get("photo_source_id_limit"), bool):
         errors.append("project.photo_source_id_limit must be an integer")
+    for field in ("setup_captive_portal_ip", "setup_connection_ready_condition"):
+        if not str(project.get(field, "")).strip():
+            errors.append(f"project.{field} is required")
+    for field in ("setup_wizard_steps", "setup_required_connection_fields", "setup_skip_substitutions"):
+        values = project.get(field, [])
+        if not isinstance(values, list) or not values:
+            errors.append(f"project.{field} must be a non-empty list")
+        elif any(not isinstance(value, str) or not value.strip() for value in values):
+            errors.append(f"project.{field} must only contain non-empty strings")
     screen_schedule_effects = project.get("screen_schedule_off_effects", [])
     if not isinstance(screen_schedule_effects, list) or not screen_schedule_effects:
         errors.append("project.screen_schedule_off_effects must be a non-empty list")
@@ -1057,6 +1066,102 @@ def check_photo_source_metadata(product: dict, errors: list[str]) -> None:
         "Paste person ID from Immich URL",
         "Album IDs exceed 255 characters",
         "Person IDs exceed 255 characters",
+    ):
+        require_contains(web_template, needle, rel(WEB_TEMPLATE), errors)
+
+
+def check_setup_flow_metadata(product: dict, errors: list[str]) -> None:
+    project = product["project"]
+    captive_portal_ip = str(project.get("setup_captive_portal_ip", "")).strip()
+    wizard_steps = [str(value).strip() for value in project.get("setup_wizard_steps", []) if str(value).strip()]
+    connection_fields = [
+        str(value).strip() for value in project.get("setup_required_connection_fields", []) if str(value).strip()
+    ]
+    skip_substitutions = [
+        str(value).strip() for value in project.get("setup_skip_substitutions", []) if str(value).strip()
+    ]
+    ready_condition = str(project.get("setup_connection_ready_condition", "")).strip()
+
+    install_docs = read(ROOT / "docs" / "install.md", errors)
+    usb_docs = read(ROOT / "docs" / "usb-flashing.md", errors)
+    manual_setup_docs = read(ROOT / "docs" / "manual-setup.md", errors)
+    immich_frame_docs = read(ROOT / "docs" / "immich-photo-frame.md", errors)
+    web_template = read(WEB_TEMPLATE, errors)
+    connectivity_yaml = read(ROOT / "common" / "addon" / "connectivity.yaml", errors)
+    immich_config_yaml = read(ROOT / "common" / "addon" / "immich_config.yaml", errors)
+    screen_loading_yaml = read(ROOT / "devices" / "guition-esp32-p4-jc8012p4a1" / "device" / "screen_loading.yaml", errors)
+    screen_wifi_yaml = read(ROOT / "devices" / "guition-esp32-p4-jc8012p4a1" / "device" / "screen_wifi_setup.yaml", errors)
+    packages_yaml = read(ROOT / "devices" / "guition-esp32-p4-jc8012p4a1" / "packages.yaml", errors)
+
+    for device in product["devices"]:
+        esphome_name = str(device.get("esphome_name", "")).strip()
+        if not esphome_name:
+            continue
+        require_contains(install_docs, esphome_name, "docs/install.md", errors)
+        require_contains(usb_docs, esphome_name, "docs/usb-flashing.md", errors)
+        require_contains(read(ROOT / str(device.get("build_yaml", "")), errors), esphome_name, str(device.get("build_yaml", "")), errors)
+
+    if captive_portal_ip:
+        for label, text in (
+            ("docs/usb-flashing.md", usb_docs),
+            ("devices/guition-esp32-p4-jc8012p4a1/packages.yaml", packages_yaml),
+        ):
+            require_contains(text, captive_portal_ip, label, errors)
+        for label, text in (
+            ("devices/guition-esp32-p4-jc8012p4a1/device/screen_loading.yaml", screen_loading_yaml),
+            ("devices/guition-esp32-p4-jc8012p4a1/device/screen_wifi_setup.yaml", screen_wifi_yaml),
+        ):
+            require_contains(text, "${captive_portal_ip}", label, errors)
+
+    for step in wizard_steps:
+        require_contains(web_template, step, rel(WEB_TEMPLATE), errors)
+    for field in connection_fields:
+        require_contains(web_template, field, rel(WEB_TEMPLATE), errors)
+        require_contains(install_docs, field, "docs/install.md", errors)
+    for substitution in skip_substitutions:
+        require_contains(manual_setup_docs, substitution, "docs/manual-setup.md", errors)
+        require_contains(immich_config_yaml, substitution, "common/addon/immich_config.yaml", errors)
+    if ready_condition:
+        require_contains(manual_setup_docs, ready_condition, "docs/manual-setup.md", errors)
+    for needle in ("WiFi", "Immich server URL", "Immich API key"):
+        require_contains(immich_frame_docs, needle, "docs/immich-photo-frame.md", errors)
+
+    for needle in (
+        "captive_portal:",
+        'ssid: "${name}"',
+        "wifi.connected",
+        "is_valid_http_url(id(immich_url).state)",
+        "!id(immich_api_key_text).state.empty()",
+        "immich_setup_page",
+        "wifi_setup_page",
+    ):
+        require_contains(connectivity_yaml, needle, "common/addon/connectivity.yaml", errors)
+    for needle in (
+        "normalize_immich_base_url",
+        "Connection: Server URL",
+        "Connection: API Key",
+        'initial_value: "${immich_base_url}"',
+        'initial_value: "${immich_api_key}"',
+        "setup_screen_dim",
+        "immich_check_config_ready",
+        "slideshow_page",
+    ):
+        require_contains(immich_config_yaml, needle, "common/addon/immich_config.yaml", errors)
+    for needle in (
+        "Connect to the WiFi hotspot",
+        "to configure your network",
+        "Then visit ${captive_portal_ip}",
+    ):
+        require_contains(screen_loading_yaml, needle, "devices/guition-esp32-p4-jc8012p4a1/device/screen_loading.yaml", errors)
+        require_contains(screen_wifi_yaml, needle, "devices/guition-esp32-p4-jc8012p4a1/device/screen_wifi_setup.yaml", errors)
+    for needle in (
+        "renderWizard",
+        "connect your photo frame",
+        "saveConnectionValue(endpoints.immich_url",
+        "saveConnectionValue(endpoints.api_key",
+        "safeGet(endpoints.immich_url)",
+        "safeGet(endpoints.api_key)",
+        "Done",
     ):
         require_contains(web_template, needle, rel(WEB_TEMPLATE), errors)
 
@@ -1872,6 +1977,7 @@ def main() -> int:
     check_screen_tone_metadata(product, errors)
     check_clock_time_metadata(product, errors)
     check_photo_source_metadata(product, errors)
+    check_setup_flow_metadata(product, errors)
     check_devices(product, errors)
     check_public_manifest_urls(product, errors)
     check_public_site_references(product, errors)

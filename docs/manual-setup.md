@@ -56,7 +56,7 @@ Current local builds use ESPHome `2026.5.0`. The shared configuration includes c
 
 ## Pre-filling Immich credentials
 
-To skip the first-boot wizard, add to substitutions:
+To skip the first-boot wizard, provide a valid Immich URL and API key in substitutions:
 
 ```yaml
 immich_base_url: "https://photos.example.com"
