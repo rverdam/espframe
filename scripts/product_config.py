@@ -14,20 +14,21 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 PRODUCT_PATH = ROOT / "product" / "espframe.json"
-WEB_INITIAL_FETCH_STATIC_KEYS = [
-    "firmware",
-    "timezone",
-    "ntp_server_1",
-    "ntp_server_2",
-    "ntp_server_3",
-    "album_ids",
-    "album_labels",
-    "person_ids",
-    "person_labels",
-    "sunrise",
-    "sunset",
-    "developer_features_enabled",
-]
+WEB_STATIC_ENTITIES = {
+    "firmware": {"entity": "text_sensor/Firmware: Version", "fetch": True},
+    "timezone": {"entity": "select/Clock: Timezone", "optionsKey": "tz_options", "default": "", "fetch": True},
+    "ntp_server_1": {"entity": "text/Clock: NTP Server 1", "default": "0.pool.ntp.org", "fetch": True},
+    "ntp_server_2": {"entity": "text/Clock: NTP Server 2", "default": "1.pool.ntp.org", "fetch": True},
+    "ntp_server_3": {"entity": "text/Clock: NTP Server 3", "default": "2.pool.ntp.org", "fetch": True},
+    "album_ids": {"entity": "text/Photos: Album IDs", "fetch": True},
+    "album_labels": {"entity": "text/Photos: Album Labels", "fetch": True},
+    "person_ids": {"entity": "text/Photos: Person IDs", "fetch": True},
+    "person_labels": {"entity": "text/Photos: Person Labels", "fetch": True},
+    "sunrise": {"entity": "text_sensor/Screen: Sunrise", "fetch": True},
+    "sunset": {"entity": "text_sensor/Screen: Sunset", "fetch": True},
+    "developer_features_enabled": {"entity": "switch/Developer: Features", "boolFromState": True, "fetch": True},
+    "show_clock": {"entity": "switch/Clock: Show", "boolFromState": True, "default": True},
+}
 DOCS_SETTINGS_TABLES = {
     ROOT / "docs" / "screen-settings.md": {
         "screen_brightness": {"settings": ["brightness_day", "brightness_night"]},
@@ -149,6 +150,13 @@ def web_settings_metadata(product_settings: list[dict[str, Any]] | None = None) 
     return result
 
 
+def web_static_entities_metadata() -> dict[str, dict[str, Any]]:
+    result: dict[str, dict[str, Any]] = {}
+    for key, metadata in WEB_STATIC_ENTITIES.items():
+        result[key] = {field: value for field, value in metadata.items() if field != "fetch"}
+    return result
+
+
 def web_initial_fetch_keys(product_settings: list[dict[str, Any]] | None = None) -> list[str]:
     keys: list[str] = []
 
@@ -159,6 +167,7 @@ def web_initial_fetch_keys(product_settings: list[dict[str, Any]] | None = None)
     add("firmware")
     for setting in product_settings if product_settings is not None else settings():
         add(str(setting["key"]))
-    for key in WEB_INITIAL_FETCH_STATIC_KEYS:
-        add(key)
+    for key, metadata in WEB_STATIC_ENTITIES.items():
+        if metadata.get("fetch"):
+            add(key)
     return keys

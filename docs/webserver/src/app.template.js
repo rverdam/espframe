@@ -4,6 +4,7 @@
   var TIMEZONES = __ESPFRAME_TIMEZONES__;
   var TIMEZONE_LABELS = __ESPFRAME_TIMEZONE_LABELS__;
   var PRODUCT_SETTINGS = __ESPFRAME_PRODUCT_SETTINGS__;
+  var STATIC_ENTITIES = __ESPFRAME_STATIC_ENTITIES__;
 
   var S = {
     tz_options: TIMEZONES,
@@ -243,9 +244,8 @@
     return "/" + domain + "/" + encodeURIComponent(name);
   }
 
-  function productSettingEntityParts(key) {
-    var spec = PRODUCT_SETTINGS && PRODUCT_SETTINGS[key];
-    var entity = spec && typeof spec.entity === "string" ? spec.entity : "";
+  function entityStringParts(entity) {
+    entity = typeof entity === "string" ? entity : "";
     var slash = entity.indexOf("/");
     if (slash > 0) {
       return {
@@ -256,26 +256,27 @@
     return null;
   }
 
+  function productSettingEntityParts(key) {
+    var spec = PRODUCT_SETTINGS && PRODUCT_SETTINGS[key];
+    return entityStringParts(spec && spec.entity);
+  }
+
   var endpoints = {
     immich_url: eid("text", "Connection: Server URL"),
     api_key: eid("text", "Connection: API Key"),
-    timezone: eid("select", "Clock: Timezone"),
-    ntp_server_1: eid("text", "Clock: NTP Server 1"),
-    ntp_server_2: eid("text", "Clock: NTP Server 2"),
-    ntp_server_3: eid("text", "Clock: NTP Server 3"),
     backlight: eid("light", "Screen: Backlight"),
-    show_clock: eid("switch", "Clock: Show"),
-    firmware: eid("text_sensor", "Firmware: Version"),
     update: eid("update", "Firmware: Update"),
     update_beta: eid("update", "Firmware: Update Beta"),
-    sunrise: eid("text_sensor", "Screen: Sunrise"),
-    sunset: eid("text_sensor", "Screen: Sunset"),
-    album_ids: eid("text", "Photos: Album IDs"),
-    album_labels: eid("text", "Photos: Album Labels"),
-    person_ids: eid("text", "Photos: Person IDs"),
-    person_labels: eid("text", "Photos: Person Labels"),
-    developer_features_enabled: eid("switch", "Developer: Features"),
   };
+
+  function registerStaticEntityEndpoints() {
+    if (!STATIC_ENTITIES) return;
+    Object.keys(STATIC_ENTITIES).forEach(function (key) {
+      var parts = entityStringParts(STATIC_ENTITIES[key] && STATIC_ENTITIES[key].entity);
+      if (!parts) return;
+      endpoints[key] = eid(parts.domain, parts.name);
+    });
+  }
 
   function registerProductSettingEndpoints() {
     if (!PRODUCT_SETTINGS) return;
@@ -286,6 +287,7 @@
     });
   }
 
+  registerStaticEntityEndpoints();
   registerProductSettingEndpoints();
 
   function post(url, params) {
@@ -573,23 +575,24 @@
   var ENTITY_STATE_MAP = {
     "text/Connection: Server URL": { key: "immich_url" },
     "text/Connection: API Key": { key: "api_key" },
-    "select/Clock: Timezone": { key: "timezone", optionsKey: "tz_options", default: "" },
-    "text/Clock: NTP Server 1": { key: "ntp_server_1", default: "0.pool.ntp.org" },
-    "text/Clock: NTP Server 2": { key: "ntp_server_2", default: "1.pool.ntp.org" },
-    "text/Clock: NTP Server 3": { key: "ntp_server_3", default: "2.pool.ntp.org" },
-    "switch/Clock: Show": { key: "show_clock", boolFromState: true },
-    "text_sensor/Firmware: Version": { key: "firmware" },
     "switch/Screen: Schedule": { key: "schedule_enabled", boolFromState: true },
     "number/Screen: Schedule On": { key: "schedule_on_hour", default: 6, number: true },
-    "number/Screen: Schedule Off": { key: "schedule_off_hour", default: 23, number: true },
-    "text_sensor/Screen: Sunrise": { key: "sunrise" },
-    "text_sensor/Screen: Sunset": { key: "sunset" },
-    "text/Photos: Album IDs": { key: "album_ids" },
-    "text/Photos: Album Labels": { key: "album_labels" },
-    "text/Photos: Person IDs": { key: "person_ids" },
-    "text/Photos: Person Labels": { key: "person_labels" },
-    "switch/Developer: Features": { key: "developer_features_enabled", boolFromState: true }
+    "number/Screen: Schedule Off": { key: "schedule_off_hour", default: 23, number: true }
   };
+
+  function registerStaticEntities() {
+    if (!STATIC_ENTITIES) return;
+    Object.keys(STATIC_ENTITIES).forEach(function (key) {
+      var staticSpec = STATIC_ENTITIES[key];
+      if (!staticSpec || typeof staticSpec.entity !== "string") return;
+      var stateSpec = { key: key };
+      if (staticSpec.default !== undefined) stateSpec.default = staticSpec.default;
+      if (staticSpec.optionsKey) stateSpec.optionsKey = staticSpec.optionsKey;
+      if (staticSpec.boolFromState) stateSpec.boolFromState = true;
+      if (staticSpec.number) stateSpec.number = true;
+      ENTITY_STATE_MAP[staticSpec.entity] = stateSpec;
+    });
+  }
 
   function registerProductSettingEntities() {
     if (!PRODUCT_SETTINGS) return;
@@ -603,6 +606,7 @@
     });
   }
 
+  registerStaticEntities();
   registerProductSettingEntities();
 
   function applyEntityToState(d) {

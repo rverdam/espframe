@@ -4,6 +4,7 @@
   var TIMEZONES = ["Pacific/Midway (GMT-11)","Pacific/Pago_Pago (GMT-11)","Pacific/Honolulu (GMT-10)","America/Adak (GMT-10)","America/Anchorage (GMT-9)","America/Juneau (GMT-9)","America/Los_Angeles (GMT-8)","America/Vancouver (GMT-8)","America/Tijuana (GMT-8)","America/Denver (GMT-7)","America/Phoenix (GMT-7)","America/Edmonton (GMT-7)","America/Boise (GMT-7)","America/Chicago (GMT-6)","America/Mexico_City (GMT-6)","America/Winnipeg (GMT-6)","America/Guatemala (GMT-6)","America/Costa_Rica (GMT-6)","America/New_York (GMT-5)","America/Toronto (GMT-5)","America/Detroit (GMT-5)","America/Havana (GMT-5)","America/Bogota (GMT-5)","America/Lima (GMT-5)","America/Jamaica (GMT-5)","America/Panama (GMT-5)","America/Halifax (GMT-4)","America/Caracas (GMT-4)","America/Santiago (GMT-4)","America/La_Paz (GMT-4)","America/Manaus (GMT-4)","America/Barbados (GMT-4)","America/Puerto_Rico (GMT-4)","America/Santo_Domingo (GMT-4)","America/St_Johns (GMT-3:30)","America/Sao_Paulo (GMT-3)","America/Argentina/Buenos_Aires (GMT-3)","America/Montevideo (GMT-3)","America/Paramaribo (GMT-3)","Atlantic/South_Georgia (GMT-2)","Atlantic/Azores (GMT-1)","Atlantic/Cape_Verde (GMT-1)","UTC (GMT+0)","Europe/London (GMT+0)","Europe/Dublin (GMT+0)","Europe/Lisbon (GMT+0)","Africa/Casablanca (GMT+1)","Africa/Accra (GMT+0)","Atlantic/Reykjavik (GMT+0)","Europe/Paris (GMT+1)","Europe/Berlin (GMT+1)","Europe/Rome (GMT+1)","Europe/Madrid (GMT+1)","Europe/Amsterdam (GMT+1)","Europe/Brussels (GMT+1)","Europe/Vienna (GMT+1)","Europe/Zurich (GMT+1)","Europe/Stockholm (GMT+1)","Europe/Oslo (GMT+1)","Europe/Copenhagen (GMT+1)","Europe/Warsaw (GMT+1)","Europe/Prague (GMT+1)","Europe/Budapest (GMT+1)","Europe/Belgrade (GMT+1)","Africa/Lagos (GMT+1)","Africa/Tunis (GMT+1)","Africa/Cairo (GMT+2)","Europe/Athens (GMT+2)","Europe/Bucharest (GMT+2)","Europe/Helsinki (GMT+2)","Europe/Kyiv (GMT+2)","Europe/Istanbul (GMT+3)","Africa/Johannesburg (GMT+2)","Africa/Nairobi (GMT+3)","Asia/Jerusalem (GMT+2)","Asia/Amman (GMT+3)","Asia/Beirut (GMT+2)","Europe/Moscow (GMT+3)","Asia/Baghdad (GMT+3)","Asia/Riyadh (GMT+3)","Asia/Kuwait (GMT+3)","Asia/Qatar (GMT+3)","Africa/Addis_Ababa (GMT+3)","Asia/Tehran (GMT+3:30)","Asia/Dubai (GMT+4)","Asia/Muscat (GMT+4)","Asia/Baku (GMT+4)","Asia/Tbilisi (GMT+4)","Indian/Mauritius (GMT+4)","Asia/Kabul (GMT+4:30)","Asia/Karachi (GMT+5)","Asia/Tashkent (GMT+5)","Asia/Yekaterinburg (GMT+5)","Asia/Kolkata (GMT+5:30)","Asia/Colombo (GMT+5:30)","Asia/Kathmandu (GMT+5:45)","Asia/Dhaka (GMT+6)","Asia/Almaty (GMT+5)","Asia/Rangoon (GMT+6:30)","Asia/Bangkok (GMT+7)","Asia/Jakarta (GMT+7)","Asia/Ho_Chi_Minh (GMT+7)","Asia/Singapore (GMT+8)","Asia/Kuala_Lumpur (GMT+8)","Asia/Shanghai (GMT+8)","Asia/Hong_Kong (GMT+8)","Asia/Taipei (GMT+8)","Asia/Manila (GMT+8)","Australia/Perth (GMT+8)","Asia/Tokyo (GMT+9)","Asia/Seoul (GMT+9)","Asia/Pyongyang (GMT+9)","Australia/Adelaide (GMT+9:30)","Australia/Darwin (GMT+9:30)","Australia/Sydney (GMT+10)","Australia/Melbourne (GMT+10)","Australia/Brisbane (GMT+10)","Australia/Hobart (GMT+10)","Pacific/Guam (GMT+10)","Pacific/Port_Moresby (GMT+10)","Asia/Vladivostok (GMT+10)","Pacific/Noumea (GMT+11)","Pacific/Norfolk (GMT+11)","Asia/Magadan (GMT+11)","Pacific/Auckland (GMT+12)","Pacific/Fiji (GMT+12)","Pacific/Chatham (GMT+12:45)","Pacific/Tongatapu (GMT+13)","Pacific/Apia (GMT+13)","Pacific/Kiritimati (GMT+14)"];
   var TIMEZONE_LABELS = {"Pacific/Midway (GMT-11)":"Pacific/Midway (GMT-11)","Pacific/Pago_Pago (GMT-11)":"Pacific/Pago_Pago (GMT-11)","Pacific/Honolulu (GMT-10)":"Pacific/Honolulu (GMT-10)","America/Adak (GMT-10)":"America/Adak (GMT-10; daylight GMT-9)","America/Anchorage (GMT-9)":"America/Anchorage (GMT-9; daylight GMT-8)","America/Juneau (GMT-9)":"America/Juneau (GMT-9; daylight GMT-8)","America/Los_Angeles (GMT-8)":"America/Los_Angeles (GMT-8; daylight GMT-7)","America/Vancouver (GMT-8)":"America/Vancouver (GMT-8; active GMT-7)","America/Tijuana (GMT-8)":"America/Tijuana (GMT-8; daylight GMT-7)","America/Denver (GMT-7)":"America/Denver (GMT-7; daylight GMT-6)","America/Phoenix (GMT-7)":"America/Phoenix (GMT-7)","America/Edmonton (GMT-7)":"America/Edmonton (GMT-7; daylight GMT-6)","America/Boise (GMT-7)":"America/Boise (GMT-7; daylight GMT-6)","America/Chicago (GMT-6)":"America/Chicago (GMT-6; daylight GMT-5)","America/Mexico_City (GMT-6)":"America/Mexico_City (GMT-6)","America/Winnipeg (GMT-6)":"America/Winnipeg (GMT-6; daylight GMT-5)","America/Guatemala (GMT-6)":"America/Guatemala (GMT-6)","America/Costa_Rica (GMT-6)":"America/Costa_Rica (GMT-6)","America/New_York (GMT-5)":"America/New_York (GMT-5; daylight GMT-4)","America/Toronto (GMT-5)":"America/Toronto (GMT-5; daylight GMT-4)","America/Detroit (GMT-5)":"America/Detroit (GMT-5; daylight GMT-4)","America/Havana (GMT-5)":"America/Havana (GMT-5; daylight GMT-4)","America/Bogota (GMT-5)":"America/Bogota (GMT-5)","America/Lima (GMT-5)":"America/Lima (GMT-5)","America/Jamaica (GMT-5)":"America/Jamaica (GMT-5)","America/Panama (GMT-5)":"America/Panama (GMT-5)","America/Halifax (GMT-4)":"America/Halifax (GMT-4; daylight GMT-3)","America/Caracas (GMT-4)":"America/Caracas (GMT-4)","America/Santiago (GMT-4)":"America/Santiago (GMT-4; daylight GMT-3)","America/La_Paz (GMT-4)":"America/La_Paz (GMT-4)","America/Manaus (GMT-4)":"America/Manaus (GMT-4)","America/Barbados (GMT-4)":"America/Barbados (GMT-4)","America/Puerto_Rico (GMT-4)":"America/Puerto_Rico (GMT-4)","America/Santo_Domingo (GMT-4)":"America/Santo_Domingo (GMT-4)","America/St_Johns (GMT-3:30)":"America/St_Johns (GMT-3:30; daylight GMT-2:30)","America/Sao_Paulo (GMT-3)":"America/Sao_Paulo (GMT-3)","America/Argentina/Buenos_Aires (GMT-3)":"America/Argentina/Buenos_Aires (GMT-3)","America/Montevideo (GMT-3)":"America/Montevideo (GMT-3)","America/Paramaribo (GMT-3)":"America/Paramaribo (GMT-3)","Atlantic/South_Georgia (GMT-2)":"Atlantic/South_Georgia (GMT-2)","Atlantic/Azores (GMT-1)":"Atlantic/Azores (GMT-1; daylight GMT+0)","Atlantic/Cape_Verde (GMT-1)":"Atlantic/Cape_Verde (GMT-1)","UTC (GMT+0)":"UTC (GMT+0)","Europe/London (GMT+0)":"Europe/London (GMT+0; daylight GMT+1)","Europe/Dublin (GMT+0)":"Europe/Dublin (GMT+0; daylight GMT+1)","Europe/Lisbon (GMT+0)":"Europe/Lisbon (GMT+0; daylight GMT+1)","Africa/Casablanca (GMT+1)":"Africa/Casablanca (GMT+1)","Africa/Accra (GMT+0)":"Africa/Accra (GMT+0)","Atlantic/Reykjavik (GMT+0)":"Atlantic/Reykjavik (GMT+0)","Europe/Paris (GMT+1)":"Europe/Paris (GMT+1; daylight GMT+2)","Europe/Berlin (GMT+1)":"Europe/Berlin (GMT+1; daylight GMT+2)","Europe/Rome (GMT+1)":"Europe/Rome (GMT+1; daylight GMT+2)","Europe/Madrid (GMT+1)":"Europe/Madrid (GMT+1; daylight GMT+2)","Europe/Amsterdam (GMT+1)":"Europe/Amsterdam (GMT+1; daylight GMT+2)","Europe/Brussels (GMT+1)":"Europe/Brussels (GMT+1; daylight GMT+2)","Europe/Vienna (GMT+1)":"Europe/Vienna (GMT+1; daylight GMT+2)","Europe/Zurich (GMT+1)":"Europe/Zurich (GMT+1; daylight GMT+2)","Europe/Stockholm (GMT+1)":"Europe/Stockholm (GMT+1; daylight GMT+2)","Europe/Oslo (GMT+1)":"Europe/Oslo (GMT+1; daylight GMT+2)","Europe/Copenhagen (GMT+1)":"Europe/Copenhagen (GMT+1; daylight GMT+2)","Europe/Warsaw (GMT+1)":"Europe/Warsaw (GMT+1; daylight GMT+2)","Europe/Prague (GMT+1)":"Europe/Prague (GMT+1; daylight GMT+2)","Europe/Budapest (GMT+1)":"Europe/Budapest (GMT+1; daylight GMT+2)","Europe/Belgrade (GMT+1)":"Europe/Belgrade (GMT+1; daylight GMT+2)","Africa/Lagos (GMT+1)":"Africa/Lagos (GMT+1)","Africa/Tunis (GMT+1)":"Africa/Tunis (GMT+1)","Africa/Cairo (GMT+2)":"Africa/Cairo (GMT+2; daylight GMT+3)","Europe/Athens (GMT+2)":"Europe/Athens (GMT+2; daylight GMT+3)","Europe/Bucharest (GMT+2)":"Europe/Bucharest (GMT+2; daylight GMT+3)","Europe/Helsinki (GMT+2)":"Europe/Helsinki (GMT+2; daylight GMT+3)","Europe/Kyiv (GMT+2)":"Europe/Kyiv (GMT+2; daylight GMT+3)","Europe/Istanbul (GMT+3)":"Europe/Istanbul (GMT+3)","Africa/Johannesburg (GMT+2)":"Africa/Johannesburg (GMT+2)","Africa/Nairobi (GMT+3)":"Africa/Nairobi (GMT+3)","Asia/Jerusalem (GMT+2)":"Asia/Jerusalem (GMT+2; daylight GMT+3)","Asia/Amman (GMT+3)":"Asia/Amman (GMT+3)","Asia/Beirut (GMT+2)":"Asia/Beirut (GMT+2; daylight GMT+3)","Europe/Moscow (GMT+3)":"Europe/Moscow (GMT+3)","Asia/Baghdad (GMT+3)":"Asia/Baghdad (GMT+3)","Asia/Riyadh (GMT+3)":"Asia/Riyadh (GMT+3)","Asia/Kuwait (GMT+3)":"Asia/Kuwait (GMT+3)","Asia/Qatar (GMT+3)":"Asia/Qatar (GMT+3)","Africa/Addis_Ababa (GMT+3)":"Africa/Addis_Ababa (GMT+3)","Asia/Tehran (GMT+3:30)":"Asia/Tehran (GMT+3:30)","Asia/Dubai (GMT+4)":"Asia/Dubai (GMT+4)","Asia/Muscat (GMT+4)":"Asia/Muscat (GMT+4)","Asia/Baku (GMT+4)":"Asia/Baku (GMT+4)","Asia/Tbilisi (GMT+4)":"Asia/Tbilisi (GMT+4)","Indian/Mauritius (GMT+4)":"Indian/Mauritius (GMT+4)","Asia/Kabul (GMT+4:30)":"Asia/Kabul (GMT+4:30)","Asia/Karachi (GMT+5)":"Asia/Karachi (GMT+5)","Asia/Tashkent (GMT+5)":"Asia/Tashkent (GMT+5)","Asia/Yekaterinburg (GMT+5)":"Asia/Yekaterinburg (GMT+5)","Asia/Kolkata (GMT+5:30)":"Asia/Kolkata (GMT+5:30)","Asia/Colombo (GMT+5:30)":"Asia/Colombo (GMT+5:30)","Asia/Kathmandu (GMT+5:45)":"Asia/Kathmandu (GMT+5:45)","Asia/Dhaka (GMT+6)":"Asia/Dhaka (GMT+6)","Asia/Almaty (GMT+5)":"Asia/Almaty (GMT+5)","Asia/Rangoon (GMT+6:30)":"Asia/Rangoon (GMT+6:30)","Asia/Bangkok (GMT+7)":"Asia/Bangkok (GMT+7)","Asia/Jakarta (GMT+7)":"Asia/Jakarta (GMT+7)","Asia/Ho_Chi_Minh (GMT+7)":"Asia/Ho_Chi_Minh (GMT+7)","Asia/Singapore (GMT+8)":"Asia/Singapore (GMT+8)","Asia/Kuala_Lumpur (GMT+8)":"Asia/Kuala_Lumpur (GMT+8)","Asia/Shanghai (GMT+8)":"Asia/Shanghai (GMT+8)","Asia/Hong_Kong (GMT+8)":"Asia/Hong_Kong (GMT+8)","Asia/Taipei (GMT+8)":"Asia/Taipei (GMT+8)","Asia/Manila (GMT+8)":"Asia/Manila (GMT+8)","Australia/Perth (GMT+8)":"Australia/Perth (GMT+8)","Asia/Tokyo (GMT+9)":"Asia/Tokyo (GMT+9)","Asia/Seoul (GMT+9)":"Asia/Seoul (GMT+9)","Asia/Pyongyang (GMT+9)":"Asia/Pyongyang (GMT+9)","Australia/Adelaide (GMT+9:30)":"Australia/Adelaide (GMT+9:30; daylight GMT+10:30)","Australia/Darwin (GMT+9:30)":"Australia/Darwin (GMT+9:30)","Australia/Sydney (GMT+10)":"Australia/Sydney (GMT+10; daylight GMT+11)","Australia/Melbourne (GMT+10)":"Australia/Melbourne (GMT+10; daylight GMT+11)","Australia/Brisbane (GMT+10)":"Australia/Brisbane (GMT+10)","Australia/Hobart (GMT+10)":"Australia/Hobart (GMT+10; daylight GMT+11)","Pacific/Guam (GMT+10)":"Pacific/Guam (GMT+10)","Pacific/Port_Moresby (GMT+10)":"Pacific/Port_Moresby (GMT+10)","Asia/Vladivostok (GMT+10)":"Asia/Vladivostok (GMT+10)","Pacific/Noumea (GMT+11)":"Pacific/Noumea (GMT+11)","Pacific/Norfolk (GMT+11)":"Pacific/Norfolk (GMT+11; daylight GMT+12)","Asia/Magadan (GMT+11)":"Asia/Magadan (GMT+11)","Pacific/Auckland (GMT+12)":"Pacific/Auckland (GMT+12; daylight GMT+13)","Pacific/Fiji (GMT+12)":"Pacific/Fiji (GMT+12)","Pacific/Chatham (GMT+12:45)":"Pacific/Chatham (GMT+12:45; daylight GMT+13:45)","Pacific/Tongatapu (GMT+13)":"Pacific/Tongatapu (GMT+13)","Pacific/Apia (GMT+13)":"Pacific/Apia (GMT+13)","Pacific/Kiritimati (GMT+14)":"Pacific/Kiritimati (GMT+14)"};
   var PRODUCT_SETTINGS = {"photo_source":{"entity":"select/Photos: Source","domain":"select","default":"All Photos","options":["All Photos","Favorites","Album","Person","Memories"]},"date_filter_mode":{"entity":"select/Photos: Date Filter Mode","domain":"select","default":"Fixed Range","options":["Fixed Range","Relative Range"]},"relative_unit":{"entity":"select/Photos: Relative Unit","domain":"select","default":"Years","options":["Months","Years"]},"photo_orientation":{"entity":"select/Photos: Orientation","domain":"select","default":"Any","options":["Any","Portrait Only","Landscape Only"]},"display_mode":{"entity":"select/Photos: Display Mode","domain":"select","default":"Fill","options":["Fill","Fit"]},"interval":{"entity":"select/Photos: Slideshow Interval","domain":"select","default":"15 seconds","options":["10 seconds","15 seconds","20 seconds","30 seconds","45 seconds","1 minute","2 minutes","3 minutes","5 minutes","10 minutes"]},"conn_timeout":{"entity":"select/Screen: Connection Timeout","domain":"select","default":"10 minutes","options":["30 seconds","45 seconds","1 minute","2 minutes","3 minutes","5 minutes","10 minutes","15 minutes","20 minutes","30 minutes"]},"screen_rotation":{"entity":"select/Screen: Rotation","domain":"select","default":"0","options":["0","180"],"developerOptions":["90","270"]},"photo_metadata_date_format":{"entity":"select/Device: Metadata Date Format","domain":"select","default":"Date Taken","options":["Relative Date","Date Taken"]},"photo_metadata_date_taken_format":{"entity":"select/Device: Metadata Date Taken Format","domain":"select","default":"1 January, 2026","options":["1 January, 2026","January 1, 2026"]},"clock_format":{"entity":"select/Clock: Format","domain":"select","default":"24 Hour","options":["24 Hour","12 Hour"]},"update_frequency":{"entity":"select/Firmware: Update Frequency","domain":"select","default":"Daily","options":["Hourly","Daily","Weekly","Monthly"]},"auto_update":{"entity":"switch/Firmware: Auto Update","domain":"switch","default":true,"options":[]},"beta_channel":{"entity":"switch/Firmware: Beta Channel","domain":"switch","default":false,"options":[]},"firmware_manifest_url":{"entity":"text/Firmware: Manifest URL","domain":"text","default":"","options":[]},"firmware_beta_manifest_url":{"entity":"text/Firmware: Beta Manifest URL","domain":"text","default":"","options":[]},"date_filter_enabled":{"entity":"switch/Photos: Date Filter","domain":"switch","default":false,"options":[]},"date_from":{"entity":"text/Photos: Date From","domain":"text","default":"","options":[]},"date_to":{"entity":"text/Photos: Date To","domain":"text","default":"","options":[]},"relative_amount":{"entity":"number/Photos: Relative Amount","domain":"number","default":1,"options":[],"min":1,"max":120,"step":1},"schedule_enabled":{"entity":"switch/Screen: Schedule Enabled","domain":"switch","default":false,"options":[]},"schedule_on_hour":{"entity":"number/Screen: Schedule On Hour","domain":"number","default":6,"options":[],"min":0,"max":23,"step":1},"schedule_off_hour":{"entity":"number/Screen: Schedule Off Hour","domain":"number","default":23,"options":[],"min":0,"max":23,"step":1},"schedule_wake_timeout":{"entity":"number/Screen: Schedule Wake Timeout","domain":"number","default":60,"options":[],"min":10,"max":3600,"step":10},"brightness_day":{"entity":"number/Screen: Daytime Brightness","domain":"number","default":100,"options":[],"min":10,"max":100,"step":5},"brightness_night":{"entity":"number/Screen: Nighttime Brightness","domain":"number","default":75,"options":[],"min":10,"max":100,"step":5},"base_tone_enabled":{"entity":"switch/Screen: Tone Adjustment","domain":"switch","default":false,"options":[]},"base_tone":{"entity":"number/Screen: Display Tone","domain":"number","default":0,"options":[],"min":0,"max":100,"step":5},"warm_tones_enabled":{"entity":"switch/Screen: Night Tone Adjustment","domain":"switch","default":false,"options":[]},"warm_tone_intensity":{"entity":"number/Screen: Warm Tone Intensity","domain":"number","default":50,"options":[],"min":10,"max":100,"step":5},"warm_tone_override":{"entity":"switch/Screen: Warm Tone Override","domain":"switch","default":false,"options":[]},"portrait_pairing":{"entity":"switch/Photos: Portrait Pairing","domain":"switch","default":true,"options":[]},"photo_metadata_date_enabled":{"entity":"switch/Device: Metadata Date","domain":"switch","default":true,"options":[]},"photo_metadata_location_enabled":{"entity":"switch/Device: Metadata Location","domain":"switch","default":true,"options":[]}};
+  var STATIC_ENTITIES = {"firmware":{"entity":"text_sensor/Firmware: Version"},"timezone":{"entity":"select/Clock: Timezone","optionsKey":"tz_options","default":""},"ntp_server_1":{"entity":"text/Clock: NTP Server 1","default":"0.pool.ntp.org"},"ntp_server_2":{"entity":"text/Clock: NTP Server 2","default":"1.pool.ntp.org"},"ntp_server_3":{"entity":"text/Clock: NTP Server 3","default":"2.pool.ntp.org"},"album_ids":{"entity":"text/Photos: Album IDs"},"album_labels":{"entity":"text/Photos: Album Labels"},"person_ids":{"entity":"text/Photos: Person IDs"},"person_labels":{"entity":"text/Photos: Person Labels"},"sunrise":{"entity":"text_sensor/Screen: Sunrise"},"sunset":{"entity":"text_sensor/Screen: Sunset"},"developer_features_enabled":{"entity":"switch/Developer: Features","boolFromState":true},"show_clock":{"entity":"switch/Clock: Show","boolFromState":true,"default":true}};
 
   var S = {
     tz_options: TIMEZONES,
@@ -243,9 +244,8 @@
     return "/" + domain + "/" + encodeURIComponent(name);
   }
 
-  function productSettingEntityParts(key) {
-    var spec = PRODUCT_SETTINGS && PRODUCT_SETTINGS[key];
-    var entity = spec && typeof spec.entity === "string" ? spec.entity : "";
+  function entityStringParts(entity) {
+    entity = typeof entity === "string" ? entity : "";
     var slash = entity.indexOf("/");
     if (slash > 0) {
       return {
@@ -256,26 +256,27 @@
     return null;
   }
 
+  function productSettingEntityParts(key) {
+    var spec = PRODUCT_SETTINGS && PRODUCT_SETTINGS[key];
+    return entityStringParts(spec && spec.entity);
+  }
+
   var endpoints = {
     immich_url: eid("text", "Connection: Server URL"),
     api_key: eid("text", "Connection: API Key"),
-    timezone: eid("select", "Clock: Timezone"),
-    ntp_server_1: eid("text", "Clock: NTP Server 1"),
-    ntp_server_2: eid("text", "Clock: NTP Server 2"),
-    ntp_server_3: eid("text", "Clock: NTP Server 3"),
     backlight: eid("light", "Screen: Backlight"),
-    show_clock: eid("switch", "Clock: Show"),
-    firmware: eid("text_sensor", "Firmware: Version"),
     update: eid("update", "Firmware: Update"),
     update_beta: eid("update", "Firmware: Update Beta"),
-    sunrise: eid("text_sensor", "Screen: Sunrise"),
-    sunset: eid("text_sensor", "Screen: Sunset"),
-    album_ids: eid("text", "Photos: Album IDs"),
-    album_labels: eid("text", "Photos: Album Labels"),
-    person_ids: eid("text", "Photos: Person IDs"),
-    person_labels: eid("text", "Photos: Person Labels"),
-    developer_features_enabled: eid("switch", "Developer: Features"),
   };
+
+  function registerStaticEntityEndpoints() {
+    if (!STATIC_ENTITIES) return;
+    Object.keys(STATIC_ENTITIES).forEach(function (key) {
+      var parts = entityStringParts(STATIC_ENTITIES[key] && STATIC_ENTITIES[key].entity);
+      if (!parts) return;
+      endpoints[key] = eid(parts.domain, parts.name);
+    });
+  }
 
   function registerProductSettingEndpoints() {
     if (!PRODUCT_SETTINGS) return;
@@ -286,6 +287,7 @@
     });
   }
 
+  registerStaticEntityEndpoints();
   registerProductSettingEndpoints();
 
   function post(url, params) {
@@ -573,23 +575,24 @@
   var ENTITY_STATE_MAP = {
     "text/Connection: Server URL": { key: "immich_url" },
     "text/Connection: API Key": { key: "api_key" },
-    "select/Clock: Timezone": { key: "timezone", optionsKey: "tz_options", default: "" },
-    "text/Clock: NTP Server 1": { key: "ntp_server_1", default: "0.pool.ntp.org" },
-    "text/Clock: NTP Server 2": { key: "ntp_server_2", default: "1.pool.ntp.org" },
-    "text/Clock: NTP Server 3": { key: "ntp_server_3", default: "2.pool.ntp.org" },
-    "switch/Clock: Show": { key: "show_clock", boolFromState: true },
-    "text_sensor/Firmware: Version": { key: "firmware" },
     "switch/Screen: Schedule": { key: "schedule_enabled", boolFromState: true },
     "number/Screen: Schedule On": { key: "schedule_on_hour", default: 6, number: true },
-    "number/Screen: Schedule Off": { key: "schedule_off_hour", default: 23, number: true },
-    "text_sensor/Screen: Sunrise": { key: "sunrise" },
-    "text_sensor/Screen: Sunset": { key: "sunset" },
-    "text/Photos: Album IDs": { key: "album_ids" },
-    "text/Photos: Album Labels": { key: "album_labels" },
-    "text/Photos: Person IDs": { key: "person_ids" },
-    "text/Photos: Person Labels": { key: "person_labels" },
-    "switch/Developer: Features": { key: "developer_features_enabled", boolFromState: true }
+    "number/Screen: Schedule Off": { key: "schedule_off_hour", default: 23, number: true }
   };
+
+  function registerStaticEntities() {
+    if (!STATIC_ENTITIES) return;
+    Object.keys(STATIC_ENTITIES).forEach(function (key) {
+      var staticSpec = STATIC_ENTITIES[key];
+      if (!staticSpec || typeof staticSpec.entity !== "string") return;
+      var stateSpec = { key: key };
+      if (staticSpec.default !== undefined) stateSpec.default = staticSpec.default;
+      if (staticSpec.optionsKey) stateSpec.optionsKey = staticSpec.optionsKey;
+      if (staticSpec.boolFromState) stateSpec.boolFromState = true;
+      if (staticSpec.number) stateSpec.number = true;
+      ENTITY_STATE_MAP[staticSpec.entity] = stateSpec;
+    });
+  }
 
   function registerProductSettingEntities() {
     if (!PRODUCT_SETTINGS) return;
@@ -603,6 +606,7 @@
     });
   }
 
+  registerStaticEntities();
   registerProductSettingEntities();
 
   function applyEntityToState(d) {
