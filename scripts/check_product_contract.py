@@ -677,6 +677,7 @@ def check_project_metadata(product: dict, errors: list[str]) -> None:
         "firmware_version_placeholder_line",
         "firmware_local_build_version",
         "release_changelog_fallback_category",
+        "phase_1_status_note",
         "public_base_url",
         "support_url",
         "support_button_image_url",
@@ -711,6 +712,7 @@ def check_project_metadata(product: dict, errors: list[str]) -> None:
         errors.append("project.package_name must look like a reverse-DNS package name")
 
     release_url_base = str(project.get("release_url_base", "")).strip()
+    phase_1_status_note = check_relative_path(project.get("phase_1_status_note"), "project.phase_1_status_note", errors)
     repository_url = str(project.get("repository_url", "")).strip().rstrip("/")
     default_branch = str(project.get("github_default_branch", "")).strip()
     if repository_url and not repository_url.startswith("https://github.com/"):
@@ -727,6 +729,20 @@ def check_project_metadata(product: dict, errors: list[str]) -> None:
         errors.append("project.release_url_base must end with /")
     if repository_url and release_url_base and release_url_base != f"{repository_url}/releases/tag/":
         errors.append("project.release_url_base must be based on project.repository_url")
+    if phase_1_status_note:
+        phase_1_path = ROOT / phase_1_status_note
+        if not phase_1_status_note.startswith("docs/") or phase_1_path.suffix != ".md":
+            errors.append("project.phase_1_status_note must point at a docs markdown file")
+        phase_1_text = read(phase_1_path, errors)
+        for needle in (
+            "Product-owned behavior",
+            "Generated outputs",
+            "Validation gates",
+            "Phase 2 boundary",
+            "npm run check:product",
+            "npm run check:all",
+        ):
+            require_contains(phase_1_text, needle, phase_1_status_note, errors)
     release_actions = project.get("release_workflow_actions", {})
     if not isinstance(release_actions, dict) or not release_actions:
         errors.append("project.release_workflow_actions must be a non-empty object")

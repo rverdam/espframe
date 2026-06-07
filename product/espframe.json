@@ -400,6 +400,7 @@
       }
     ],
     "release_changelog_fallback_category": "Other changes",
+    "phase_1_status_note": "docs/phase-1-product-metadata.md",
     "docs_firmware_verify_retries": 10,
     "docs_firmware_verify_delay_seconds": 15,
     "github_docs_release_meta_step_id": "release-meta",
