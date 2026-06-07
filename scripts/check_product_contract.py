@@ -493,6 +493,11 @@ def check_project_metadata(product: dict, errors: list[str]) -> None:
         "setup_connection_ready_condition",
         "manual_setup_package_ref",
         "manual_setup_package_refresh",
+        "factory_firmware_purpose",
+        "factory_firmware_secret_policy",
+        "factory_firmware_network_mode",
+        "factory_firmware_setup_method",
+        "factory_firmware_local_use",
     ):
         if not str(project.get(field, "")).strip():
             errors.append(f"project.{field} is required")
@@ -2124,6 +2129,49 @@ def check_device_workflow_contract(product: dict, errors: list[str]) -> None:
             )
 
 
+def check_factory_firmware_metadata(product: dict, errors: list[str]) -> None:
+    project = product["project"]
+    purpose = str(project.get("factory_firmware_purpose", "")).strip()
+    secret_policy = str(project.get("factory_firmware_secret_policy", "")).strip()
+    network_mode = str(project.get("factory_firmware_network_mode", "")).strip()
+    setup_method = str(project.get("factory_firmware_setup_method", "")).strip()
+    local_use = str(project.get("factory_firmware_local_use", "")).strip()
+
+    install_docs = read(ROOT / "docs" / "install.md", errors)
+    connectivity_yaml = read(ROOT / "common" / "addon" / "connectivity.yaml", errors)
+    compile_workflow = read(ROOT / ".github" / "workflows" / "compile.yml", errors)
+    release_workflow = read(ROOT / ".github" / "workflows" / "release.yml", errors)
+
+    for device in product["devices"]:
+        slug = str(device.get("slug", "")).strip()
+        build_yaml = check_relative_path(device.get("build_yaml"), f"Device {slug} build_yaml", errors)
+        if not build_yaml:
+            continue
+        build_text = read(ROOT / build_yaml, errors)
+        for value in (purpose, secret_policy, network_mode, setup_method, local_use):
+            if value:
+                require_contains(build_text, value, build_yaml, errors)
+        require_contains(build_text, "firmware_version: \"0.0.0\"", build_yaml, errors)
+        require_contains(build_text, "css_include: \"../docs/public/webserver/style.css\"", build_yaml, errors)
+        require_contains(build_text, "js_include: \"../docs/public/webserver/app.js\"", build_yaml, errors)
+        require_contains(compile_workflow, f"compile /config/{build_yaml}", ".github/workflows/compile.yml", errors)
+        require_contains(
+            release_workflow,
+            "compile /config/builds/${{ matrix.yaml }}.factory.yaml",
+            ".github/workflows/release.yml",
+            errors,
+        )
+
+    if network_mode:
+        require_contains(install_docs, "hotspot", "docs/install.md", errors)
+        require_contains(connectivity_yaml, 'ssid: "${name}"', "common/addon/connectivity.yaml", errors)
+        require_contains(connectivity_yaml, "wifi:", "common/addon/connectivity.yaml", errors)
+        require_contains(connectivity_yaml, "ap:", "common/addon/connectivity.yaml", errors)
+    if setup_method:
+        require_contains(connectivity_yaml, "captive_portal:", "common/addon/connectivity.yaml", errors)
+        require_contains(install_docs, setup_method.replace("_", " "), "docs/install.md", errors)
+
+
 def check_esphome_version(product: dict, errors: list[str]) -> None:
     version = str(product["project"].get("esphome_version", "")).strip()
     if not version:
@@ -2621,6 +2669,7 @@ def main() -> int:
     check_public_site_references(product, errors)
     check_docs_site_config(product, errors)
     check_device_workflow_contract(product, errors)
+    check_factory_firmware_metadata(product, errors)
     check_esphome_version(product, errors)
     check_node_version(product, errors)
     check_workflows(errors)

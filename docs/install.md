@@ -39,7 +39,7 @@ Requires **Chrome** or **Edge** on a desktop computer with [Web Serial](https://
 
 1. **Connect** — Plug in with USB-C; allow drivers if prompted.
 2. **Flash** — Click **Install Espframe for Immich**, choose the device’s serial port, confirm. Takes a few minutes.
-3. **WiFi** — Enter network name and password when prompted. If no prompt appears, the device creates a hotspot named **immich-frame-10inch**; connect from phone/laptop for captive-portal setup.
+3. **WiFi** — Enter network name and password when prompted. If no prompt appears, the device creates a hotspot named **immich-frame-10inch**; connect from phone/laptop for captive portal setup.
 4. **Immich** — Open the device IP in a browser (shown on screen), enter **Immich Server URL** and **API Key**. The URL can be an IP address such as `http://192.168.1.30:2283` or a domain such as `https://photos.example.com`. See [API Key](/api-key) for permissions. Photos start loading. Next: [Photo Sources](/photo-sources) to choose what to display.
 
 The setup wizard defaults to **24 Hour** clock format, **Europe/London (GMT+0)** timezone, shows the clock by default, and uses **0.pool.ntp.org**, **1.pool.ntp.org**, and **2.pool.ntp.org** for time sync. Pick your timezone during setup so the clock and sunrise/sunset based brightness and night tone are calculated for your location. The on-screen clock refreshes every **60 seconds**.
