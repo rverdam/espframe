@@ -200,6 +200,24 @@ def check_devices(product: dict, errors: list[str]) -> None:
         read(build_yaml, errors)
 
 
+def build_yaml_stem(build_yaml: str) -> str:
+    name = Path(build_yaml).name
+    if name.endswith(".factory.yaml"):
+        return name[: -len(".factory.yaml")]
+    if name.endswith(".yaml"):
+        return name[: -len(".yaml")]
+    return name
+
+
+def build_yaml_device_name(path: Path, errors: list[str]) -> str:
+    text = read(path, errors)
+    match = re.search(r'(?m)^  name: "([^"]+)"$', text)
+    if not match:
+        errors.append(f"{rel(path)} is missing substitutions.name")
+        return ""
+    return match.group(1)
+
+
 def check_public_manifest_urls(product: dict, errors: list[str]) -> None:
     base_url = public_base_url(product)
     if not base_url.startswith("https://"):
@@ -232,6 +250,59 @@ def check_public_manifest_urls(product: dict, errors: list[str]) -> None:
         ):
             require_contains(text, url, filename, errors)
     require_contains(docs_workflow, f'--base-url "{base_url}"', ".github/workflows/docs.yml", errors)
+
+
+def check_device_workflow_contract(product: dict, errors: list[str]) -> None:
+    release_workflow = read(ROOT / ".github" / "workflows" / "release.yml", errors)
+    docs_workflow = read(ROOT / ".github" / "workflows" / "docs.yml", errors)
+    compile_workflow = read(ROOT / ".github" / "workflows" / "compile.yml", errors)
+    slugs = [str(device.get("slug", "")).strip() for device in product["devices"]]
+    expected_slugs = " ".join(slugs)
+    for label, text in (
+        (".github/workflows/release.yml", release_workflow),
+        (".github/workflows/docs.yml", docs_workflow),
+    ):
+        require_contains(text, f"DEVICE_SLUGS: {expected_slugs}", label, errors)
+
+    for device in product["devices"]:
+        slug = str(device.get("slug", "")).strip()
+        build_yaml = str(device.get("build_yaml", "")).strip()
+        yaml_stem = build_yaml_stem(build_yaml)
+        build_name = build_yaml_device_name(ROOT / build_yaml, errors)
+        chip = str(device.get("chip", "")).strip()
+
+        for needle in (
+            f"- slug: {slug}",
+            f"yaml: {yaml_stem}",
+            f"build_name: {build_name}",
+            f"chip: {chip}",
+        ):
+            require_contains(release_workflow, needle, ".github/workflows/release.yml", errors)
+        require_contains(
+            release_workflow,
+            f"compile /config/builds/${{{{ matrix.yaml }}}}.factory.yaml",
+            ".github/workflows/release.yml",
+            errors,
+        )
+        require_contains(
+            compile_workflow,
+            f"compile /config/{build_yaml}",
+            ".github/workflows/compile.yml",
+            errors,
+        )
+        for prefix in ("firmware", "firmware/beta"):
+            require_contains(
+                docs_workflow,
+                f"if [ -f {prefix}/{slug}.manifest.json ]; then",
+                ".github/workflows/docs.yml",
+                errors,
+            )
+            require_contains(
+                docs_workflow,
+                f"cp {prefix}/{slug}.manifest.json {prefix}/manifest.json",
+                ".github/workflows/docs.yml",
+                errors,
+            )
 
 
 def check_esphome_version(product: dict, errors: list[str]) -> None:
@@ -681,6 +752,7 @@ def main() -> int:
     product = load_product()
     check_devices(product, errors)
     check_public_manifest_urls(product, errors)
+    check_device_workflow_contract(product, errors)
     check_esphome_version(product, errors)
     check_workflows(errors)
     check_settings(product, errors)
