@@ -987,6 +987,9 @@ def check_project_metadata(product: dict, errors: list[str]) -> None:
         elif any(not isinstance(value, str) or not value.strip() for value in values):
             errors.append(f"project.{field} must only contain non-empty strings")
     frequency_hours = project.get("firmware_update_frequency_hours", {})
+    manifest_url_length_limit = project.get("firmware_manifest_url_length_limit")
+    if not isinstance(manifest_url_length_limit, int) or isinstance(manifest_url_length_limit, bool) or manifest_url_length_limit < 1:
+        errors.append("project.firmware_manifest_url_length_limit must be a positive integer")
     if not isinstance(frequency_hours, dict) or not frequency_hours:
         errors.append("project.firmware_update_frequency_hours must be a non-empty object")
     else:
@@ -1157,6 +1160,9 @@ def check_project_metadata(product: dict, errors: list[str]) -> None:
         errors.append("project.ntp_default_servers must be a non-empty list")
     elif any(not isinstance(value, str) or not value.strip() for value in ntp_default_servers):
         errors.append("project.ntp_default_servers must only contain non-empty strings")
+    ntp_server_length_limit = project.get("ntp_server_length_limit")
+    if not isinstance(ntp_server_length_limit, int) or isinstance(ntp_server_length_limit, bool) or ntp_server_length_limit < 1:
+        errors.append("project.ntp_server_length_limit must be a positive integer")
     timezone_effects = project.get("timezone_change_effects", [])
     if not isinstance(timezone_effects, list) or not timezone_effects:
         errors.append("project.timezone_change_effects must be a non-empty list")
@@ -1625,6 +1631,7 @@ def check_firmware_update_metadata(product: dict, errors: list[str]) -> None:
     manual_check_behavior = str(project.get("firmware_manual_check_behavior", "")).strip()
     beta_check_requirement = str(project.get("firmware_beta_check_requirement", "")).strip()
     custom_manifest_requirement = str(project.get("firmware_custom_manifest_requirement", "")).strip()
+    manifest_url_length_limit = project.get("firmware_manifest_url_length_limit")
     frequency_hours = project.get("firmware_update_frequency_hours", {})
     default_urls = default_public_manifest_urls(product)
 
@@ -1662,6 +1669,13 @@ def check_firmware_update_metadata(product: dict, errors: list[str]) -> None:
         require_contains(web_template, custom_manifest_requirement, rel(WEB_TEMPLATE), errors)
         require_contains(firmware_yaml, "is_valid_http_url(url)", "common/addon/firmware_update.yaml", errors)
         require_contains(firmware_yaml, "strip_trailing_slashes", "common/addon/firmware_update.yaml", errors)
+    if isinstance(manifest_url_length_limit, int) and not isinstance(manifest_url_length_limit, bool):
+        if firmware_yaml.count(f"max_length: {manifest_url_length_limit}") < 2:
+            errors.append(
+                "common/addon/firmware_update.yaml must use project.firmware_manifest_url_length_limit for both manifest URL text fields"
+            )
+        require_contains(web_template, f"MAX_FIRMWARE_URL_LENGTH = {manifest_url_length_limit}", rel(WEB_TEMPLATE), errors)
+        require_contains(web_text, f"MAX_FIRMWARE_URL_LENGTH = {manifest_url_length_limit}", rel(WEB_APP), errors)
     if isinstance(frequency_hours, dict):
         for label, hours in frequency_hours.items():
             if not isinstance(label, str) or not isinstance(hours, int) or isinstance(hours, bool):
@@ -2124,6 +2138,7 @@ def check_clock_time_metadata(product: dict, errors: list[str]) -> None:
     clock_default_show = project.get("clock_default_show")
     clock_update_interval = str(project.get("clock_update_interval", "")).strip()
     ntp_default_servers = [str(value).strip() for value in project.get("ntp_default_servers", []) if str(value).strip()]
+    ntp_server_length_limit = project.get("ntp_server_length_limit")
     timezone_effects = [str(value).strip() for value in project.get("timezone_change_effects", []) if str(value).strip()]
 
     settings_by_key = {str(setting.get("key", "")).strip(): setting for setting in product["settings"]}
@@ -2154,6 +2169,7 @@ def check_clock_time_metadata(product: dict, errors: list[str]) -> None:
     backup_docs = read(ROOT / "docs" / "backup.md", errors)
     time_yaml = read(TIME_YAML, errors)
     web_template = read(WEB_TEMPLATE, errors)
+    web_text = read(WEB_APP, errors)
 
     for needle in (
         clock_default_format,
@@ -2190,6 +2206,11 @@ def check_clock_time_metadata(product: dict, errors: list[str]) -> None:
             rel(WEB_TEMPLATE),
             errors,
         )
+    if isinstance(ntp_server_length_limit, int) and not isinstance(ntp_server_length_limit, bool):
+        if time_yaml.count(f"max_length: {ntp_server_length_limit}") < len(ntp_default_servers):
+            errors.append(f"{rel(TIME_YAML)} must use project.ntp_server_length_limit for all NTP server text fields")
+        require_contains(web_template, f"MAX_NTP_SERVER_LENGTH = {ntp_server_length_limit}", rel(WEB_TEMPLATE), errors)
+        require_contains(web_text, f"MAX_NTP_SERVER_LENGTH = {ntp_server_length_limit}", rel(WEB_APP), errors)
     if clock_default_show is True:
         require_contains(time_yaml, "restore_mode: RESTORE_DEFAULT_ON", rel(TIME_YAML), errors)
     elif clock_default_show is False:
