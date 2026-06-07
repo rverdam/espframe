@@ -878,6 +878,8 @@ def check_project_metadata(product: dict, errors: list[str]) -> None:
         errors.append("project.github_release_notes_fetch_tags must be true or false")
     if not isinstance(project.get("github_release_build_fail_fast"), bool):
         errors.append("project.github_release_build_fail_fast must be true or false")
+    if not isinstance(project.get("esphome_docker_remove_container"), bool):
+        errors.append("project.esphome_docker_remove_container must be true or false")
     release_asset_suffixes = project.get("release_asset_suffixes", [])
     if not isinstance(release_asset_suffixes, list) or not release_asset_suffixes:
         errors.append("project.release_asset_suffixes must be a non-empty list")
@@ -3693,6 +3695,7 @@ def check_esphome_version(product: dict, errors: list[str]) -> None:
     version = str(project.get("esphome_version", "")).strip()
     docker_image = str(project.get("esphome_docker_image", "")).strip().rstrip(":")
     config_mount = str(project.get("esphome_config_mount", "")).strip()
+    remove_container = project.get("esphome_docker_remove_container")
     if not version:
         errors.append("project.esphome_version is required")
         return
@@ -3714,6 +3717,8 @@ def check_esphome_version(product: dict, errors: list[str]) -> None:
             require_contains(text, f"{docker_image}:{version}", rel(path), errors)
         if config_mount:
             require_contains(text, f'-v "${{PWD}}:{config_mount}"', rel(path), errors)
+        if remove_container is True:
+            require_contains(text, "docker run --rm", rel(path), errors)
 
 
 def check_workflows(product: dict, errors: list[str]) -> None:
