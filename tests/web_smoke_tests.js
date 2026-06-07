@@ -12,9 +12,83 @@ if (!fs.existsSync(chromePath)) {
   throw new Error("Google Chrome is required for browser smoke tests");
 }
 
+const validBackupFixture = {
+  version: 1,
+  connection: {
+    immich_url: "https://imported.photos.example.com",
+    api_key: "imported-api-key",
+  },
+  photos: {
+    source: "Person",
+    album_ids: "11111111-1111-4111-8111-111111111111",
+    album_labels: "Family",
+    person_ids: "22222222-2222-4222-8222-222222222222",
+    person_labels: "Alex",
+    date_filter_enabled: true,
+    date_filter_mode: "Relative Range",
+    relative_amount: 3,
+    relative_unit: "Years",
+    orientation: "Portrait Only",
+    portrait_pairing: true,
+    display_mode: "Fill",
+  },
+  frequency: {
+    interval: "30 seconds",
+    conn_timeout: "5 minutes",
+  },
+  firmware_updates: {
+    auto_update: true,
+    beta_channel: true,
+    update_frequency: "Weekly",
+    manifest_url: "https://firmware.example.com/manifest.json",
+    beta_manifest_url: "https://firmware.example.com/beta/manifest.json",
+  },
+  clock: {
+    show: true,
+    format: "24 Hour",
+    timezone: "Europe/London (GMT+0)",
+    ntp_servers: ["0.pool.ntp.org", "1.pool.ntp.org", "2.pool.ntp.org"],
+  },
+  screen: {
+    brightness_day: 90,
+    brightness_night: 60,
+    schedule_enabled: true,
+    schedule_on_hour: 7,
+    schedule_off_hour: 22,
+    schedule_wake_timeout: 120,
+    base_tone_enabled: true,
+    base_tone: 35,
+    warm_tones_enabled: true,
+    warm_tone_intensity: 45,
+    warm_tone_override: false,
+    rotation: "180",
+  },
+};
+
+const rejectedBackupFixture = {
+  version: 1,
+  photos: {
+    album_ids: "not-an-album-uuid",
+  },
+};
+
+const scenarios = [
+  { name: "wizard", configured: false, width: 1280, height: 900 },
+  { name: "settings", configured: true, width: 1280, height: 900 },
+  { name: "settings-mobile", configured: true, width: 390, height: 900 },
+  { name: "backup-import-success", configured: true, width: 1280, height: 900, importFixture: validBackupFixture },
+  { name: "backup-import-rejected", configured: true, width: 1280, height: 900, importFixture: rejectedBackupFixture },
+];
+
 function browserScriptForScenario(scenario) {
   return `
-    window.__smoke = { posts: [], errors: [], downloads: 0, inputClicks: 0 };
+    window.__smoke = {
+      posts: [],
+      errors: [],
+      downloads: 0,
+      inputClicks: 0,
+      importFixture: ${JSON.stringify(scenario.importFixture || null)}
+    };
     window.addEventListener("error", function (event) {
       window.__smoke.errors.push(event.message || "browser error");
     });
@@ -22,11 +96,24 @@ function browserScriptForScenario(scenario) {
       window.__smoke.errors.push(String(event.reason || "unhandled rejection"));
     });
 
+    URL.createObjectURL = function () { return "blob:espframe-smoke"; };
+    URL.revokeObjectURL = function () {};
     HTMLAnchorElement.prototype.click = function () {
       if (this.download) window.__smoke.downloads += 1;
     };
+    FileReader.prototype.readAsText = function (file) {
+      this.result = file && file.__smokeContent ? file.__smokeContent : "";
+      if (this.onload) setTimeout(() => this.onload({ target: this }), 0);
+    };
     HTMLInputElement.prototype.click = function () {
-      if (this.type === "file") window.__smoke.inputClicks += 1;
+      if (this.type !== "file") return;
+      window.__smoke.inputClicks += 1;
+      if (!window.__smoke.importFixture) return;
+      Object.defineProperty(this, "files", {
+        configurable: true,
+        value: [{ name: "espframe-config-smoke.json", __smokeContent: JSON.stringify(window.__smoke.importFixture) }]
+      });
+      setTimeout(() => this.dispatchEvent(new Event("change")), 0);
     };
 
     class SmokeEventSource {
@@ -36,6 +123,8 @@ function browserScriptForScenario(scenario) {
         setTimeout(() => {
           if (this.onopen) this.onopen({ type: "open" });
           this.dispatch("log", { msg: "Smoke log line", lvl: 3 });
+          this.dispatch("state", { id: "text_sensor/Screen: Sunrise", value: "06:30" });
+          this.dispatch("state", { id: "text_sensor/Screen: Sunset", value: "21:45" });
         }, 25);
       }
       addEventListener(type, listener) {
@@ -51,28 +140,71 @@ function browserScriptForScenario(scenario) {
     }
     window.EventSource = SmokeEventSource;
 
-    const configured = ${JSON.stringify(scenario === "settings")};
+    const configured = ${JSON.stringify(scenario.configured)};
     const endpointValues = {
       "Connection: Server URL": configured ? "https://photos.example.com" : "",
       "Connection: API Key": configured ? "fixture-api-key" : "",
+      "Firmware: Version": "v1.0.0",
       "Photos: Source": "Album",
       "Photos: Album IDs": "11111111-1111-4111-8111-111111111111",
       "Photos: Album Labels": "Family",
-      "Photos: Person IDs": "",
-      "Photos: Person Labels": "",
+      "Photos: Person IDs": "22222222-2222-4222-8222-222222222222",
+      "Photos: Person Labels": "Alex",
+      "Photos: Date Filter": true,
+      "Photos: Date Filter Mode": "Fixed Range",
+      "Photos: Date From": "2024-01-01",
+      "Photos: Date To": "2026-06-07",
+      "Photos: Relative Amount": 2,
+      "Photos: Relative Unit": "Years",
+      "Photos: Orientation": "Any",
+      "Photos: Portrait Pairing": true,
       "Photos: Display Mode": "Fill",
       "Photos: Slideshow Interval": "15 seconds",
       "Screen: Connection Timeout": "10 minutes",
+      "Clock: Show": true,
       "Clock: Format": "24 Hour",
       "Clock: Timezone": "Europe/London (GMT+0)",
+      "Clock: NTP Server 1": "0.pool.ntp.org",
+      "Clock: NTP Server 2": "1.pool.ntp.org",
+      "Clock: NTP Server 3": "2.pool.ntp.org",
+      "Firmware: Auto Update": true,
+      "Firmware: Beta Channel": true,
+      "Firmware: Update Frequency": "Daily",
       "Firmware: Manifest URL": "",
-      "Firmware: Beta Manifest URL": ""
+      "Firmware: Beta Manifest URL": "",
+      "Screen: Daytime Brightness": 100,
+      "Screen: Nighttime Brightness": 75,
+      "Screen: Schedule Enabled": false,
+      "Screen: Schedule On Hour": 6,
+      "Screen: Schedule Off Hour": 23,
+      "Screen: Schedule Wake Timeout": 60,
+      "Screen: Tone Adjustment": false,
+      "Screen: Display Tone": 0,
+      "Screen: Night Tone Adjustment": false,
+      "Screen: Warm Tone Intensity": 50,
+      "Screen: Warm Tone Override": false,
+      "Screen: Rotation": "0",
+      "Developer: Features": false
     };
 
     window.fetch = function (url, options) {
       const method = options && options.method ? options.method : "GET";
-      if (method === "POST") window.__smoke.posts.push(String(url));
       const decoded = decodeURIComponent(String(url));
+      if (method === "POST") window.__smoke.posts.push(decoded);
+      if (decoded.indexOf("Firmware: Update Beta") !== -1) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ value: "v1.1.0-beta.1", state: "UPDATE AVAILABLE", current_version: "v1.0.0", latest_version: "v1.1.0-beta.1" })
+        });
+      }
+      if (decoded.indexOf("Firmware: Update") !== -1) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ value: "v1.0.1", state: "UPDATE AVAILABLE", current_version: "v1.0.0", latest_version: "v1.0.1" })
+        });
+      }
       let value = "";
       Object.keys(endpointValues).forEach((name) => {
         if (decoded.indexOf(name) !== -1) value = endpointValues[name];
@@ -90,7 +222,7 @@ function browserScriptForScenario(scenario) {
 function smokeAssertionsForScenario(scenario) {
   return `
     (async function () {
-      function waitFor(check, timeoutMs) {
+      function waitFor(check, timeoutMs, label) {
         const started = Date.now();
         return new Promise((resolve, reject) => {
           function poll() {
@@ -99,7 +231,7 @@ function smokeAssertionsForScenario(scenario) {
             } catch (error) {
               return reject(error);
             }
-            if (Date.now() - started > timeoutMs) return reject(new Error("Timed out waiting for " + ${JSON.stringify(scenario)}));
+            if (Date.now() - started > timeoutMs) return reject(new Error("Timed out waiting for " + label));
             setTimeout(poll, 50);
           }
           poll();
@@ -114,40 +246,106 @@ function smokeAssertionsForScenario(scenario) {
       function buttonByText(text) {
         return Array.from(document.querySelectorAll("button")).find((button) => button.textContent.trim() === text);
       }
+      function clickButton(text) {
+        const button = buttonByText(text);
+        if (!button) throw new Error("Button not found: " + text);
+        button.click();
+        return button;
+      }
+      function selectByLabel(labelText) {
+        const labels = Array.from(document.querySelectorAll("label"));
+        const label = labels.find((item) => item.textContent.trim() === labelText);
+        if (!label || !label.parentElement) throw new Error("Field not found: " + labelText);
+        const select = label.parentElement.querySelector("select");
+        if (!select) throw new Error("Select not found for field: " + labelText);
+        return select;
+      }
+      function setSelect(labelText, value) {
+        const select = selectByLabel(labelText);
+        select.value = value;
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+      function requirePhotoSourceModes() {
+        const sourceSelect = selectByLabel("Source");
+        ["All Photos", "Favorites", "Album", "Person", "Memories"].forEach((mode) => {
+          if (!Array.from(sourceSelect.options).some((option) => option.value === mode)) {
+            throw new Error("Missing photo source mode: " + mode);
+          }
+          setSelect("Source", mode);
+        });
+        requireText("Add an album");
+        setSelect("Source", "Person");
+        requireText("Add a person");
+      }
 
       try {
-        if (${JSON.stringify(scenario)} === "wizard") {
-          await waitFor(() => pageText().indexOf("connect your photo frame") !== -1, 8000);
+        if (${JSON.stringify(scenario.name)} === "wizard") {
+          await waitFor(() => pageText().indexOf("connect your photo frame") !== -1, 8000, "wizard");
           requireText("Immich Server URL");
           requireText("API Key");
           requireText("Import Settings");
         } else {
-          await waitFor(() => pageText().indexOf("Photo Source") !== -1, 8000);
+          await waitFor(() => pageText().indexOf("Photo Source") !== -1, 8000, "settings");
           requireText("Immich Server URL");
           requireText("Photo Source");
-          requireText("Add an album");
-          requireText("Add a person");
-          requireText("Export");
-          requireText("Import");
-          const exportButton = buttonByText("Export");
-          const importButton = buttonByText("Import");
-          if (!exportButton) throw new Error("Export button not found");
-          if (!importButton) throw new Error("Import button not found");
-          exportButton.click();
-          importButton.click();
-          if (window.__smoke.downloads !== 1) throw new Error("Export did not trigger a download");
-          if (window.__smoke.inputClicks !== 1) throw new Error("Import did not open the file picker");
-          const logsTab = Array.from(document.querySelectorAll(".sp-tab")).find((tab) => tab.textContent.trim() === "Logs");
-          if (logsTab) logsTab.click();
-          requireText("Clear");
+          requireText("Date Filter");
+          requireText("Fixed Range");
+          requireText("Relative Range");
+          requireText("Firmware");
+          requireText("Installed");
+          requireText("Auto updates");
+          requireText("Beta Channel");
+          requirePhotoSourceModes();
+
+          if (${JSON.stringify(scenario.name)} === "settings" || ${JSON.stringify(scenario.name)} === "settings-mobile") {
+            clickButton("Export");
+            clickButton("Import");
+            if (window.__smoke.downloads !== 1) throw new Error("Export did not trigger a download");
+            if (window.__smoke.inputClicks !== 1) throw new Error("Import did not open the file picker");
+            const checkButton = clickButton("Check for Update");
+            await waitFor(() => checkButton.textContent.trim() === "Check for Update", 7000, "firmware check");
+            requireText("Stable");
+            requireText("v1.0.1");
+            requireText("Pre-release");
+            requireText("v1.1.0-beta.1");
+            const logsTab = Array.from(document.querySelectorAll(".sp-tab")).find((tab) => tab.textContent.trim() === "Logs");
+            if (!logsTab) throw new Error("Logs tab not found");
+            logsTab.click();
+            requireText("Clear");
+            await waitFor(() => pageText().indexOf("Smoke log line") !== -1, 8000, "log line");
+            if (${JSON.stringify(scenario.name)} === "settings-mobile") {
+              if (document.documentElement.scrollWidth > window.innerWidth + 4) {
+                throw new Error("Mobile viewport has horizontal overflow");
+              }
+            }
+          }
+
+          if (${JSON.stringify(scenario.name)} === "backup-import-success") {
+            clickButton("Import");
+            await waitFor(() => pageText().indexOf("Settings imported successfully") !== -1, 8000, "successful import");
+            if (!window.__smoke.posts.some((url) => url.indexOf("Connection: Server URL") !== -1)) {
+              throw new Error("Import did not post connection URL");
+            }
+            if (!window.__smoke.posts.some((url) => url.indexOf("Screen: Schedule Wake Timeout") !== -1)) {
+              throw new Error("Import did not post screen schedule setting");
+            }
+          }
+
+          if (${JSON.stringify(scenario.name)} === "backup-import-rejected") {
+            clickButton("Import");
+            await waitFor(() => pageText().indexOf("Import skipped invalid album IDs") !== -1, 8000, "rejected import");
+            if (window.__smoke.posts.some((url) => url.indexOf("Photos: Album IDs") !== -1)) {
+              throw new Error("Rejected album IDs were posted to the device");
+            }
+          }
         }
         if (window.__smoke.errors.length) throw new Error(window.__smoke.errors.join("; "));
-        document.documentElement.setAttribute("data-smoke-${scenario}", "pass");
-        document.body.appendChild(document.createTextNode(" ESPFRAME_BROWSER_SMOKE_${scenario.toUpperCase()}_PASS "));
+        document.documentElement.setAttribute("data-smoke-${scenario.name}", "pass");
+        document.body.appendChild(document.createTextNode(" ESPFRAME_BROWSER_SMOKE_${scenario.name.toUpperCase().replace(/-/g, "_")}_PASS "));
       } catch (error) {
-        document.documentElement.setAttribute("data-smoke-${scenario}", "fail");
+        document.documentElement.setAttribute("data-smoke-${scenario.name}", "fail");
         const pre = document.createElement("pre");
-        pre.id = "smoke-error-${scenario}";
+        pre.id = "smoke-error-${scenario.name}";
         pre.textContent = error && error.stack ? error.stack : String(error);
         document.body.appendChild(pre);
       }
@@ -159,7 +357,7 @@ function htmlForScenario(scenario) {
   const escapedAppSource = appSource.replace(/<\/script/gi, "<\\/script");
   return `<!doctype html>
 <html>
-<head><meta charset="utf-8"><title>Espframe web smoke ${scenario}</title></head>
+<head><meta charset="utf-8"><title>Espframe web smoke ${scenario.name}</title></head>
 <body><esp-app></esp-app>
 <script>${browserScriptForScenario(scenario)}</script>
 <script>${escapedAppSource}</script>
@@ -170,7 +368,7 @@ function htmlForScenario(scenario) {
 
 function runScenario(scenario) {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "espframe-web-smoke-"));
-  const htmlPath = path.join(tempDir, `${scenario}.html`);
+  const htmlPath = path.join(tempDir, `${scenario.name}.html`);
   const userDataDir = path.join(tempDir, "chrome-profile");
   fs.writeFileSync(htmlPath, htmlForScenario(scenario));
   const result = spawnSync(
@@ -181,22 +379,20 @@ function runScenario(scenario) {
       "--no-first-run",
       "--no-default-browser-check",
       `--user-data-dir=${userDataDir}`,
-      "--virtual-time-budget=10000",
+      `--window-size=${scenario.width},${scenario.height}`,
+      "--virtual-time-budget=16000",
       "--dump-dom",
       `file://${htmlPath}`,
     ],
-    { encoding: "utf8", timeout: 20000 }
+    { encoding: "utf8", timeout: 30000 }
   );
 
   const output = `${result.stdout || ""}\n${result.stderr || ""}`;
-  assert.equal(result.status, 0, `Chrome failed for ${scenario}:\n${output}`);
-  assert.ok(
-    output.includes(`ESPFRAME_BROWSER_SMOKE_${scenario.toUpperCase()}_PASS`),
-    `Browser smoke scenario ${scenario} failed:\n${output}`
-  );
+  assert.equal(result.status, 0, `Chrome failed for ${scenario.name}:\n${output}`);
+  const passToken = `ESPFRAME_BROWSER_SMOKE_${scenario.name.toUpperCase().replace(/-/g, "_")}_PASS`;
+  assert.ok(output.includes(passToken), `Browser smoke scenario ${scenario.name} failed:\n${output}`);
 }
 
-runScenario("wizard");
-runScenario("settings");
+scenarios.forEach(runScenario);
 
 console.log("web browser smoke tests passed");
