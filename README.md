@@ -14,7 +14,7 @@ Espframe is for people who want their photos out in the room, not hidden on a ph
   Show photos from the Immich server you already run, without needing a tablet, Raspberry Pi, Home Assistant, or a separate slideshow service.
 
 - **Keep your photos private**  
-  The frame talks directly to your Immich server over your own network. There is no Espframe cloud service and no extra account to trust with your pictures.
+  The frame connects directly to your Immich server over your own network. There is no Espframe cloud service and no extra account to trust with your pictures.
 
 - **Choose what appears on the frame**  
   Show your whole library, favorites, specific albums, specific people, "on this day" memories, or photos from a chosen date range.
