@@ -3157,15 +3157,25 @@ def check_workflows(errors: list[str]) -> None:
 
 def check_node_version(product: dict, errors: list[str]) -> None:
     version = str(product["project"].get("node_version", "")).strip()
+    node24_env = str(product["project"].get("github_actions_node24_env", "")).strip()
     if not version:
         errors.append("project.node_version is required")
         return
     if not re.match(r"^\d+$", version):
         errors.append("project.node_version must be a major version number")
+    if version == "24" and not node24_env:
+        errors.append("project.github_actions_node24_env is required when project.node_version is 24")
 
-    for path in (ROOT / ".github" / "workflows" / "compile.yml", ROOT / ".github" / "workflows" / "docs.yml"):
+    node_workflow_paths = (ROOT / ".github" / "workflows" / "compile.yml", ROOT / ".github" / "workflows" / "docs.yml")
+    for path in node_workflow_paths:
         text = read(path, errors)
         require_contains(text, f"node-version: {version}", rel(path), errors)
+        if version == "24" and node24_env:
+            require_contains(text, node24_env, rel(path), errors)
+
+    if version == "24" and node24_env:
+        release_workflow = read(ROOT / ".github" / "workflows" / "release.yml", errors)
+        require_contains(release_workflow, node24_env, ".github/workflows/release.yml", errors)
 
 
 def check_web_entity_metadata(product: dict, errors: list[str]) -> None:
