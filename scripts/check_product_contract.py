@@ -2818,7 +2818,8 @@ def check_public_site_references(product: dict, errors: list[str]) -> None:
     base_url = public_base_url(product)
     docs_url = public_url("", product)
     install_url = public_url("install", product)
-    web_app_url = public_url("webserver/app.js", product)
+    web_app_path = str(product["project"].get("web_server_public_app_path", "")).strip()
+    web_app_url = public_url(web_app_path, product) if web_app_path else ""
     project_name = str(product["project"].get("name", "")).strip()
     social_image_alt = str(product["project"].get("social_image_alt", "")).strip()
     usb_flashing_image = str(product["project"].get("usb_flashing_image", "")).strip()
