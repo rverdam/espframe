@@ -186,8 +186,8 @@ static void test_immich_body_helpers() {
   assert(immich_metadata_page_for_total(0) == 1);
   assert(immich_metadata_page_for_total(848) == 1);
   assert(immich_metadata_page_for_total(848, 5) <= 170);
-  assert(immich_source_uses_metadata_search("All Photos"));
-  assert(immich_source_uses_metadata_search("Favorites"));
+  assert(!immich_source_uses_metadata_search("All Photos"));
+  assert(!immich_source_uses_metadata_search("Favorites"));
   assert(immich_source_uses_metadata_search("Album"));
   assert(immich_source_uses_metadata_search("Person"));
   std::string album_metadata = build_immich_metadata_search_body(

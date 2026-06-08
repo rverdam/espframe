@@ -258,7 +258,7 @@ script:
               - script.execute: immich_fetch_into_slot
 
   # ---------------------------------------------------------------------------
-  # Fetch a random asset from photo sources using paged metadata search.
+  # Fetch a random asset from Album and Person sources using paged metadata search.
   #
   # Metadata search is stable and supports page/size; the frame first reads the
   # total, then asks for one small random page so large libraries are not limited
