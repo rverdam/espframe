@@ -14,6 +14,7 @@ globals:
     initial_value: 'false'
   - id: backlight_manual_off
     type: bool
+    restore_value: true
     initial_value: 'false'
   - id: manual_wake_ms
     type: uint32_t
@@ -28,7 +29,7 @@ light:
     output: backlight_output
     name: "Screen: Backlight"
     default_transition_length: 500ms
-    restore_mode: ALWAYS_ON
+    restore_mode: RESTORE_DEFAULT_ON
     web_server:
       sorting_group_id: sg_screen
     on_turn_on:
@@ -57,7 +58,8 @@ light:
                 return !id(backlight_paused) &&
                        !id(screen_schedule_asleep) &&
                        !id(screensaver_display_off_active) &&
-                       !id(backlight_manual_off);
+                       !id(backlight_manual_off) &&
+                       !id(firmware_update_blank_active);
             then:
               - script.execute: screen_schedule_manual_sleep
 

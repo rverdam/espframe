@@ -74,7 +74,7 @@ script:
       - delay: 120s
       - if:
           condition:
-            lambda: 'return !id(backlight_paused);'
+            lambda: 'return !id(backlight_paused) && !id(backlight_manual_off);'
           then:
             - light.turn_on:
                 id: backlight

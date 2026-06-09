@@ -243,9 +243,27 @@ script:
                 value: '0'
             - script.execute: backlight_schedule_display_off
           else:
-            - globals.set:
-                id: screen_schedule_asleep
-                value: 'false'
+            - if:
+                condition:
+                  lambda: 'return id(backlight_manual_off);'
+                then:
+                  - globals.set:
+                      id: backlight_paused
+                      value: 'true'
+                  - globals.set:
+                      id: screensaver_display_off_active
+                      value: 'true'
+                  - globals.set:
+                      id: screen_schedule_asleep
+                      value: 'false'
+                  - globals.set:
+                      id: manual_wake_ms
+                      value: '0'
+                  - script.execute: backlight_schedule_display_off
+                else:
+                  - globals.set:
+                      id: screen_schedule_asleep
+                      value: 'false'
 
   # Restore the right visible page after waking from the black screen-off page.
   - id: screen_schedule_restore_page
@@ -427,6 +445,7 @@ script:
             lambda: |-
               auto now = id(sntp_time).now();
               return id(backlight_paused) || id(screen_schedule_asleep) ||
+                     id(backlight_manual_off) ||
                      (id(schedule_enabled).state && !now.is_valid());
           then:
             - script.execute: backlight_force_display_off
@@ -668,6 +687,7 @@ interval:
           condition:
             lambda: |-
               return id(screen_schedule_asleep) ||
+                     id(backlight_manual_off) ||
                      (id(schedule_enabled).state && !id(sntp_time).now().is_valid());
           then:
             - script.execute: backlight_force_display_off
