@@ -55,10 +55,10 @@ def compile_firmware() -> bool:
 
     checks = []
     for device in release_matrix_devices():
-        command = ["docker", "run"]
+        factory_command = ["docker", "run"]
         if remove_flag:
-            command.append(remove_flag)
-        command.extend(
+            factory_command.append(remove_flag)
+        factory_command.extend(
             [
                 "-v",
                 f"{ROOT}:{mount}",
@@ -67,7 +67,24 @@ def compile_firmware() -> bool:
                 f"{mount}/builds/{device['yaml']}.factory.yaml",
             ]
         )
-        checks.append(run(command, f"ESPHome factory compile ({device['slug']})"))
+        checks.append(run(factory_command, f"ESPHome factory compile ({device['slug']})"))
+
+        ota_command = ["docker", "run"]
+        if remove_flag:
+            ota_command.append(remove_flag)
+        ota_command.extend(
+            [
+                "-v",
+                f"{ROOT}:{mount}",
+                f"{image}:{version}",
+                "-s",
+                "firmware_version",
+                "v0.0.0",
+                "compile",
+                f"{mount}/builds/{device['yaml']}.yaml",
+            ]
+        )
+        checks.append(run(ota_command, f"ESPHome OTA compile ({device['slug']})"))
     return all(checks)
 
 

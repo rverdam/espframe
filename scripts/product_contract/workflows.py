@@ -195,6 +195,8 @@ def check_device_workflow_contract(product: dict, errors: list[str]) -> None:
             require_contains(release_workflow, needle, ".github/workflows/release.yml", errors)
     if release_source_ota_binary:
         for needle in (
+            '-s firmware_version "${VERSION}"',
+            'compile "${ESPHOME_CONFIG_MOUNT}/builds/${{ matrix.yaml }}.yaml"',
             f'"${{BUILD_DIR}}/{release_source_ota_binary}"',
             f"OTA binary not found",
         ):
@@ -680,4 +682,3 @@ def check_node_version(product: dict, errors: list[str]) -> None:
     if version == "24" and node24_env:
         release_workflow = read(ROOT / ".github" / "workflows" / "release.yml", errors)
         require_contains(release_workflow, node24_env, ".github/workflows/release.yml", errors)
-

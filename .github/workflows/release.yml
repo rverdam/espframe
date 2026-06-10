@@ -100,6 +100,20 @@ jobs:
             "${ESPHOME_DOCKER_IMAGE}:${ESPHOME_VERSION}" \
             compile "${ESPHOME_CONFIG_MOUNT}/builds/${{ matrix.yaml }}.factory.yaml"
 
+          BUILD_DIR="${RELEASE_ESPHOME_CACHE_DIR}/build/${{ matrix.build_name }}/.pioenvs/${{ matrix.build_name }}"
+          mkdir -p output
+          if [ ! -f "${BUILD_DIR}/firmware.factory.bin" ]; then
+            echo "::error::Firmware compilation failed - factory binary not found"
+            exit 1
+          fi
+          sudo cp "${BUILD_DIR}/firmware.factory.bin" "output/${{ matrix.slug }}.factory.bin"
+
+          docker run ${ESPHOME_DOCKER_REMOVE_FLAG} \
+            -v "${PWD}:${ESPHOME_CONFIG_MOUNT}" \
+            "${ESPHOME_DOCKER_IMAGE}:${ESPHOME_VERSION}" \
+            -s firmware_version "${VERSION}" \
+            compile "${ESPHOME_CONFIG_MOUNT}/builds/${{ matrix.yaml }}.yaml"
+
       - name: Fix ESPHome cache permissions
         if: always()
         run: |
@@ -115,16 +129,11 @@ jobs:
           BUILD_DIR="${RELEASE_ESPHOME_CACHE_DIR}/build/${{ matrix.build_name }}/.pioenvs/${{ matrix.build_name }}"
           mkdir -p output
 
-          if [ ! -f "${BUILD_DIR}/firmware.factory.bin" ]; then
-            echo "::error::Firmware compilation failed - factory binary not found"
-            exit 1
-          fi
           if [ ! -f "${BUILD_DIR}/firmware.bin" ]; then
             echo "::error::Firmware compilation failed - OTA binary not found"
             exit 1
           fi
 
-          sudo cp "${BUILD_DIR}/firmware.factory.bin" "output/${{ matrix.slug }}.factory.bin"
           sudo cp "${BUILD_DIR}/firmware.bin" "output/${{ matrix.slug }}.ota.bin"
 
           python3 scripts/firmware_release.py manifest \

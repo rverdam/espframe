@@ -145,6 +145,12 @@ def check_factory_firmware_metadata(product: dict, errors: list[str]) -> None:
                 ".github/workflows/release.yml",
                 errors,
             )
+            require_contains(
+                release_workflow,
+                'compile "${ESPHOME_CONFIG_MOUNT}/builds/${{ matrix.yaml }}.yaml"',
+                ".github/workflows/release.yml",
+                errors,
+            )
 
     if network_mode:
         require_contains(install_docs, "hotspot", "docs/install.md", errors)
