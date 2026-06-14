@@ -334,7 +334,7 @@ script:
           id: http_req
           url: !lambda 'return id(immich_url).state + "/api/search/metadata";'
           capture_response: true
-          max_response_buffer_size: 24kB
+          max_response_buffer_size: 48kB
           request_headers:
             Content-Type: application/json
             Accept: application/json
@@ -446,7 +446,7 @@ script:
                 url: !lambda |-
                   return id(immich_url).state + "/api/albums/" + id(immich_metadata_album_id);
                 capture_response: true
-                max_response_buffer_size: 8kB
+                max_response_buffer_size: 32kB
                 request_headers:
                   Accept: application/json
                   x-api-key: !lambda 'return id(immich_api_key_text).state.c_str();'
