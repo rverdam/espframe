@@ -256,7 +256,7 @@ inline uint32_t immich_metadata_page_for_total(uint32_t total,
 }
 
 inline bool immich_source_uses_metadata_search(const std::string &photo_source) {
-  return photo_source == "Album" || photo_source == "Person" || photo_source == "Tag";
+  return false;  // All sources use /api/search/random which supports albumIds, personIds, tagIds
 }
 
 inline std::string build_immich_metadata_search_body(uint32_t page,
