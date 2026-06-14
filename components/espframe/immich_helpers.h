@@ -507,9 +507,15 @@ inline uint32_t parse_immich_metadata_total(const std::string &body) {
 // Returns the "assetCount" field directly.
 inline uint32_t parse_album_asset_count(const std::string &body) {
   auto doc = esphome::json::parse_json(body);
-  if (doc.isNull() || !doc.is<JsonObject>()) return 0;
+  if (doc.isNull() || !doc.is<JsonObject>()) {
+    ESP_LOGW("immich", "parse_album_asset_count: JSON parse failed (body size: %zu)", body.length());
+    return 0;
+  }
   JsonObject root = doc.as<JsonObject>();
-  if (!root["assetCount"].is<int>()) return 0;
+  if (!root["assetCount"].is<int>()) {
+    ESP_LOGW("immich", "parse_album_asset_count: assetCount field missing (body size: %zu)", body.length());
+    return 0;
+  }
   int count = root["assetCount"].as<int>();
   return count > 0 ? static_cast<uint32_t>(count) : 0;
 }
@@ -518,9 +524,15 @@ inline uint32_t parse_album_asset_count(const std::string &body) {
 // (PersonStatisticsResponseDto). Returns the "assets" field directly.
 inline uint32_t parse_person_asset_count(const std::string &body) {
   auto doc = esphome::json::parse_json(body);
-  if (doc.isNull() || !doc.is<JsonObject>()) return 0;
+  if (doc.isNull() || !doc.is<JsonObject>()) {
+    ESP_LOGW("immich", "parse_person_asset_count: JSON parse failed (body size: %zu)", body.length());
+    return 0;
+  }
   JsonObject root = doc.as<JsonObject>();
-  if (!root["assets"].is<int>()) return 0;
+  if (!root["assets"].is<int>()) {
+    ESP_LOGW("immich", "parse_person_asset_count: assets field missing (body size: %zu)", body.length());
+    return 0;
+  }
   int count = root["assets"].as<int>();
   return count > 0 ? static_cast<uint32_t>(count) : 0;
 }
