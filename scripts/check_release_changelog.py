@@ -102,6 +102,7 @@ def test_existing_tag_uses_previous_stable_tag() -> None:
 def test_bad_range_fails() -> None:
     tmp, repo = with_temp_repo()
     original_root = release_changelog.ROOT
+    original_max = release_changelog.MAX_VISIBLE_COMMITS
     try:
         release_changelog.ROOT = repo
         try:
@@ -112,13 +113,74 @@ def test_bad_range_fails() -> None:
             raise AssertionError("bad changelog range unexpectedly passed")
     finally:
         release_changelog.ROOT = original_root
+        release_changelog.MAX_VISIBLE_COMMITS = original_max
         tmp.cleanup()
+
+
+def test_merge_commits_filtered() -> None:
+    """Merge commits should be counted in summary but excluded from detailed listing."""
+    tmp, repo = with_temp_repo()
+    original_root = release_changelog.ROOT
+    original_max = release_changelog.MAX_VISIBLE_COMMITS
+    try:
+        release_changelog.ROOT = repo
+        release_changelog.MAX_VISIBLE_COMMITS = 10
+        write(repo, "common/addon/firmware_update.yaml", "text_sensor: []\n")
+        commit(repo, "Fix sensor")
+        write(repo, "docs/README.md", "# Docs\n")
+        commit(repo, "Merge branch 'feature-x'")
+        write(repo, "scripts/release.py", "# script\n")
+        commit(repo, "Add release script (#42)")
+        git(repo, "tag", "v1.2.0")
+        text = release_changelog.build_changelog("v1.2.0", None, "v1.2.0", None)
+    finally:
+        release_changelog.ROOT = original_root
+        release_changelog.MAX_VISIBLE_COMMITS = original_max
+        tmp.cleanup()
+
+    assert "1 merge" in text or "1 merges" in text
+    assert "Merge branch" not in text.split("## Detailed changes")[1]
+    assert "Fix sensor" in text
+    assert "Add release script" in text
+
+
+def test_capped_changelog_shows_compact_summary() -> None:
+    """When commit count exceeds MAX_VISIBLE_COMMITS, show per-category counts + most recent commits."""
+    tmp, repo = with_temp_repo()
+    original_root = release_changelog.ROOT
+    original_max = release_changelog.MAX_VISIBLE_COMMITS
+    try:
+        release_changelog.ROOT = repo
+        release_changelog.MAX_VISIBLE_COMMITS = 2
+        # Create 4 commits to exceed the cap
+        write(repo, "common/addon/immich_api.yaml", "immich:\n")
+        commit(repo, "Fix immich API timeout")
+        write(repo, "docs/README.md", "# Updated\n")
+        commit(repo, "Update README with setup instructions")
+        write(repo, "components/espframe/new_feature.h", "// new")
+        commit(repo, "Add parallax scrolling feature (#45)")
+        write(repo, ".github/workflows/release.yml", "jobs:\n")
+        commit(repo, "Fix release pipeline OTA")
+        git(repo, "tag", "v1.5.0")
+        text = release_changelog.build_changelog("v1.5.0", None, "v1.5.0", None)
+    finally:
+        release_changelog.ROOT = original_root
+        release_changelog.MAX_VISIBLE_COMMITS = original_max
+        tmp.cleanup()
+
+    assert "5 commits (including" in text
+    assert "Showing 2 of 5 non-merge commits below" in text
+    assert "### Recent commits" in text
+    assert "Fix release pipeline OTA" in text
+    assert "Add parallax scrolling feature" in text
 
 
 def main() -> int:
     test_future_release_uses_latest_stable_tag()
     test_existing_tag_uses_previous_stable_tag()
     test_bad_range_fails()
+    test_merge_commits_filtered()
+    test_capped_changelog_shows_compact_summary()
     print("Release changelog tests passed.")
     return 0
 

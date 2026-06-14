@@ -21,8 +21,10 @@ from product_config import load_product, project_value
 ROOT = Path(__file__).resolve().parent.parent
 PROJECT = load_product()["project"]
 DEFAULT_REPO_URL = project_value("repository_url", "https://github.com/jtenniswood/espframe")
-STABLE_TAG_RE = re.compile(str(PROJECT.get("stable_release_version_pattern", r"^v\d+\.\d+\.\d+$")))
+STABLE_TAG_RE = re.compile(str(PROJECT.get("stable_release_version_pattern", r"^v\d+\.\d+\.\d+(?:-[0-9A-Za-z][0-9A-Za-z.-]*)?$")))
 PR_RE = re.compile(r"\(#(?P<number>\d+)\)")
+MERGE_COMMIT_RE = re.compile(r"^Merge ")
+MAX_VISIBLE_COMMITS = int(PROJECT.get("release_changelog_max_visible_commits", 50))
 
 
 @dataclass(frozen=True)
@@ -271,6 +273,12 @@ def breaking_changes(commits: list[Commit]) -> list[Commit]:
 
 def build_changelog(version: str, from_ref: str | None, to_ref: str, repo_url: str | None) -> str:
     commits = load_commits(from_ref, to_ref)
+    total_count = len(commits)
+
+    # Filter merge commits
+    non_merge = [c for c in commits if not MERGE_COMMIT_RE.match(c.subject)]
+    merge_count = total_count - len(non_merge)
+
     title = f"# Espframe {version}"
     lines = [title, ""]
 
@@ -300,22 +308,44 @@ def build_changelog(version: str, from_ref: str | None, to_ref: str, repo_url: s
         lines.append("")
 
     lines.extend(["## Summary", ""])
-    lines.append(f"- {len(commits)} commits are included in this release.")
+    lines.append(f"- {total_count} commits (including {merge_count} merges) are included in this release.")
     lines.append(f"- Release range: `{from_ref or 'start'}` to `{to_label}`.")
     lines.append("")
 
-    groups = grouped_commits(commits)
-    lines.extend(["## Detailed changes", ""])
-    for category in [category.title for category in CATEGORIES] + [FALLBACK_CATEGORY]:
-        entries = groups.get(category)
-        if not entries:
-            continue
-        lines.extend([f"### {category}", ""])
-        for commit in entries:
+    if total_count > MAX_VISIBLE_COMMITS:
+        # Compact summary: count per category instead of per-commit listing
+        lines.extend(["## Detailed changes", ""])
+        groups = grouped_commits(non_merge)
+        for category in [category.title for category in CATEGORIES] + [FALLBACK_CATEGORY]:
+            entries = groups.get(category)
+            if not entries:
+                continue
+            lines.append(f"- **{category}:** {len(entries)} commits")
+        lines.append("")
+        lines.append(f"> _Showing {MAX_VISIBLE_COMMITS} of {len(non_merge)} non-merge commits below. "
+                     f"See the [full comparison]({comparison}) for the complete list._" if comparison else
+                     f"> _Showing {MAX_VISIBLE_COMMITS} of {len(non_merge)} non-merge commits below._")
+        lines.append("")
+        lines.extend(["### Recent commits", ""])
+        visible = non_merge[-MAX_VISIBLE_COMMITS:]
+        for commit in visible:
             subject = linked_subject(commit.subject, repo_url)
             commit_link = linked_commit(commit, repo_url)
             lines.append(f"- {subject} ({commit.date}, {commit_link}, {human_file_count(commit)})")
         lines.append("")
+    else:
+        groups = grouped_commits(non_merge)
+        lines.extend(["## Detailed changes", ""])
+        for category in [category.title for category in CATEGORIES] + [FALLBACK_CATEGORY]:
+            entries = groups.get(category)
+            if not entries:
+                continue
+            lines.extend([f"### {category}", ""])
+            for commit in entries:
+                subject = linked_subject(commit.subject, repo_url)
+                commit_link = linked_commit(commit, repo_url)
+                lines.append(f"- {subject} ({commit.date}, {commit_link}, {human_file_count(commit)})")
+            lines.append("")
 
     return "\n".join(lines).rstrip() + "\n"
 
