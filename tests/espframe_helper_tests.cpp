@@ -192,7 +192,7 @@ static void test_immich_body_helpers() {
   assert(!immich_source_uses_metadata_search("Favorites"));
   assert(immich_source_uses_metadata_search("Album"));
   assert(immich_source_uses_metadata_search("Person"));
-  assert(immich_source_uses_metadata_search("Tag"));
+  assert(!immich_source_uses_metadata_search("Tag"));
   std::string album_metadata = build_immich_metadata_search_body(
       7, 5, true, "Album", "album-a", "", "", "\"takenAfter\":\"2026-01-01T00:00:00.000Z\"");
   assert(album_metadata.find("\"page\":7") != std::string::npos);

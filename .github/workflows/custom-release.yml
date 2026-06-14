@@ -1,0 +1,113 @@
+name: Build Custom Firmware
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Firmware version (e.g. v1.0.0-custom)'
+        required: true
+        default: 'v1.0.0-custom'
+
+permissions:
+  contents: write
+
+env:
+  ESPHOME_DOCKER_IMAGE: ghcr.io/esphome/esphome
+  ESPHOME_VERSION: 2026.5.3
+  ESPHOME_CONFIG_MOUNT: /config
+
+jobs:
+  build:
+    name: Build Firmware
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      md5: ${{ steps.manifest.outputs.md5 }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set firmware version
+        id: version
+        run: |
+          VERSION="${{ github.event.release.tag_name || github.event.inputs.version }}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Building firmware version ${VERSION}"
+
+      - name: Build factory firmware
+        run: |
+          docker run --rm \
+            -v "${PWD}:${ESPHOME_CONFIG_MOUNT}" \
+            "${ESPHOME_DOCKER_IMAGE}:${ESPHOME_VERSION}" \
+            compile "${ESPHOME_CONFIG_MOUNT}/builds/guition-esp32-p4-jc8012p4a1.factory.yaml"
+
+          BUILD_DIR="${PWD}/.esphome/build/immich-frame-10inch/.pioenvs/immich-frame-10inch"
+          mkdir -p output
+          if [ ! -f "${BUILD_DIR}/firmware.factory.bin" ]; then
+            echo "::error::Factory firmware compilation failed"
+            exit 1
+          fi
+          cp "${BUILD_DIR}/firmware.factory.bin" "output/immich-frame.factory.bin"
+
+      - name: Build OTA firmware with version
+        run: |
+          docker run --rm \
+            -v "${PWD}:${ESPHOME_CONFIG_MOUNT}" \
+            "${ESPHOME_DOCKER_IMAGE}:${ESPHOME_VERSION}" \
+            -s firmware_version "${{ steps.version.outputs.version }}" \
+            compile "${ESPHOME_CONFIG_MOUNT}/builds/guition-esp32-p4-jc8012p4a1.factory.yaml"
+
+          BUILD_DIR="${PWD}/.esphome/build/immich-frame-10inch/.pioenvs/immich-frame-10inch"
+          if [ ! -f "${BUILD_DIR}/firmware.bin" ]; then
+            echo "::error::OTA firmware compilation failed"
+            exit 1
+          fi
+          cp "${BUILD_DIR}/firmware.bin" "output/immich-frame.ota.bin"
+
+      - name: Generate manifest
+        id: manifest
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          MD5=$(md5sum output/immich-frame.ota.bin | cut -d' ' -f1)
+          cat > output/manifest.json <<MANIFEST_EOF
+          {
+              "name": "Immich Frame",
+              "version": "${VERSION}",
+              "home_assistant_domain": "esphome",
+              "builds": [
+                  {
+                      "chipFamily": "ESP32-P4",
+                      "parts": [
+                          {
+                              "path": "immich-frame.factory.bin",
+                              "offset": 0
+                          }
+                      ],
+                      "ota": {
+                          "path": "immich-frame.ota.bin",
+                          "md5": "${MD5}",
+                          "release_url": "https://github.com/${{ github.repository }}/releases/tag/${VERSION}"
+                      }
+                  }
+              ]
+          }
+          MANIFEST_EOF
+          echo "md5=${MD5}" >> "$GITHUB_OUTPUT"
+          echo "Generated manifest for ${VERSION} (MD5: ${MD5})"
+
+      - name: Upload firmware to release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "${{ github.event.release.tag_name }}" output/* --clobber
+          echo "Uploaded firmware files to release ${{ github.event.release.tag_name }}"
+
+      - name: Upload build artifacts
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v7
+        with:
+          name: firmware-${{ steps.version.outputs.version }}
+          path: output/
+          if-no-files-found: error
