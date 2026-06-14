@@ -256,7 +256,7 @@ inline uint32_t immich_metadata_page_for_total(uint32_t total,
 }
 
 inline bool immich_source_uses_metadata_search(const std::string &photo_source) {
-  return photo_source == "Album" || photo_source == "Person";
+  return photo_source == "Album" || photo_source == "Person" || photo_source == "Tag";
 }
 
 inline std::string build_immich_metadata_search_body(uint32_t page,
@@ -501,28 +501,6 @@ inline uint32_t parse_immich_metadata_total(const std::string &body) {
     total = assets["items"].as<JsonArray>().size();
   }
   return total > 0 ? static_cast<uint32_t>(total) : 0;
-}
-
-// Parse asset count from GET /api/albums/{id} response (AlbumResponseDto).
-// Returns the "assetCount" field directly.
-inline uint32_t parse_album_asset_count(const std::string &body) {
-  auto doc = esphome::json::parse_json(body);
-  if (doc.isNull() || !doc.is<JsonObject>()) return 0;
-  JsonObject root = doc.as<JsonObject>();
-  if (!root["assetCount"].is<int>()) return 0;
-  int count = root["assetCount"].as<int>();
-  return count > 0 ? static_cast<uint32_t>(count) : 0;
-}
-
-// Parse asset count from GET /api/people/{id}/statistics response
-// (PersonStatisticsResponseDto). Returns the "assets" field directly.
-inline uint32_t parse_person_asset_count(const std::string &body) {
-  auto doc = esphome::json::parse_json(body);
-  if (doc.isNull() || !doc.is<JsonObject>()) return 0;
-  JsonObject root = doc.as<JsonObject>();
-  if (!root["assets"].is<int>()) return 0;
-  int count = root["assets"].as<int>();
-  return count > 0 ? static_cast<uint32_t>(count) : 0;
 }
 
 inline std::string parse_immich_metadata_asset(const std::string &body,
