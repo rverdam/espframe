@@ -1,6 +1,10 @@
 {
   "project": {
     "name": "Espframe for Immich",
+    "package_name": "rverdam.immich-frame",
+    "repository_url": "https://github.com/rverdam/espframe",
+    "release_url_base": "https://github.com/rverdam/espframe/releases/tag/",
+    "public_base_url": "https://rverdam.github.io/espframe",
     "site_description": "Standalone Immich-powered digital photo frame on ESP32-P4",
     "ai_description": "Standalone digital photo frame firmware that displays a self-hosted Immich photo library on an ESP32-P4 10\" touchscreen. No hub, cloud, or extra software required. Built with ESPHome.",
     "social_image": "espframe.png",
@@ -426,13 +430,9 @@
     "npm_package_name": "immich-frame",
     "license_id": "PolyForm-Noncommercial-1.0.0",
     "license_name": "PolyForm Noncommercial License 1.0.0",
-    "owner_name": "jtenniswood",
-    "owner_url": "https://github.com/jtenniswood",
-    "package_name": "jtenniswood.immich-frame",
-    "repository_url": "https://github.com/jtenniswood/espframe",
+    "owner_name": "rverdam",
+    "owner_url": "https://github.com/rverdam",
     "github_default_branch": "main",
-    "public_base_url": "https://jtenniswood.github.io/espframe",
-    "release_url_base": "https://github.com/jtenniswood/espframe/releases/tag/",
     "release_workflow_actions": {
       "checkout": "actions/checkout@v6",
       "cache": "actions/cache@v5",
