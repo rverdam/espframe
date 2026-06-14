@@ -446,7 +446,7 @@ script:
                 url: !lambda |-
                   return id(immich_url).state + "/api/albums/" + id(immich_metadata_album_id);
                 capture_response: true
-                max_response_buffer_size: 128kB
+                max_response_buffer_size: 32kB
                 request_headers:
                   Accept: application/json
                   x-api-key: !lambda 'return id(immich_api_key_text).state.c_str();'
@@ -459,11 +459,10 @@ script:
                           id(immich_register_fetch_failure).execute();
                           return;
                         }
-                        ESP_LOGD("immich", "Album API response body size: %zu bytes", body.length());
                         uint32_t total = parse_album_asset_count(body);
                         if (total == 0) {
                           clear_slot_fetch_in_flight(id(target_slot), id(slot_flags));
-                          ESP_LOGW("immich", "Album has no assets (body size: %zu)", body.length());
+                          ESP_LOGW("immich", "Album has no assets");
                           return;
                         }
                         id(immich_metadata_real_total) = total;
