@@ -23,8 +23,6 @@ jobs:
     name: Build Firmware
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    outputs:
-      md5: ${{ steps.manifest.outputs.md5 }}
     steps:
       - uses: actions/checkout@v6
 
@@ -42,10 +40,11 @@ jobs:
             "${ESPHOME_DOCKER_IMAGE}:${ESPHOME_VERSION}" \
             compile "${ESPHOME_CONFIG_MOUNT}/builds/guition-esp32-p4-jc8012p4a1.factory.yaml"
 
-          BUILD_DIR="${PWD}/.esphome/build/immich-frame-10inch/.pioenvs/immich-frame-10inch"
+          BUILD_DIR="${PWD}/builds/.esphome/build/immich-frame-10inch/.pioenvs/immich-frame-10inch"
           mkdir -p output
           if [ ! -f "${BUILD_DIR}/firmware.factory.bin" ]; then
-            echo "::error::Factory firmware compilation failed"
+            echo "::error::Factory firmware not found at ${BUILD_DIR}/firmware.factory.bin"
+            ls -la "${PWD}/builds/.esphome/build/immich-frame-10inch/.pioenvs/immich-frame-10inch/" 2>/dev/null || echo "Build dir not found"
             exit 1
           fi
           cp "${BUILD_DIR}/firmware.factory.bin" "output/immich-frame.factory.bin"
@@ -56,11 +55,12 @@ jobs:
             -v "${PWD}:${ESPHOME_CONFIG_MOUNT}" \
             "${ESPHOME_DOCKER_IMAGE}:${ESPHOME_VERSION}" \
             -s firmware_version "${{ steps.version.outputs.version }}" \
-            compile "${ESPHOME_CONFIG_MOUNT}/builds/guition-esp32-p4-jc8012p4a1.factory.yaml"
+            compile "${ESPHOME_CONFIG_MOUNT}/builds/guition-esp32-p4-jc8012p4a1.yaml"
 
-          BUILD_DIR="${PWD}/.esphome/build/immich-frame-10inch/.pioenvs/immich-frame-10inch"
+          BUILD_DIR="${PWD}/builds/.esphome/build/immich-frame-10inch/.pioenvs/immich-frame-10inch"
           if [ ! -f "${BUILD_DIR}/firmware.bin" ]; then
-            echo "::error::OTA firmware compilation failed"
+            echo "::error::OTA firmware not found at ${BUILD_DIR}/firmware.bin"
+            ls -la "${BUILD_DIR}/" 2>/dev/null || echo "Build dir not found"
             exit 1
           fi
           cp "${BUILD_DIR}/firmware.bin" "output/immich-frame.ota.bin"
