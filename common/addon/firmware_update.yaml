@@ -14,8 +14,8 @@
 
 substitutions:
   firmware_version: "dev"
-  firmware_manifest_url: "https://jtenniswood.github.io/espframe/firmware/manifest.json"
-  firmware_beta_manifest_url: "https://jtenniswood.github.io/espframe/firmware/beta/manifest.json"
+  firmware_manifest_url: "https://rverdam.github.io/espframe/firmware/manifest.json"
+  firmware_beta_manifest_url: "https://rverdam.github.io/espframe/firmware/beta/manifest.json"
 
 esphome:
   project:
